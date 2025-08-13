@@ -28,8 +28,8 @@ const Button = ({
   // Define size variants
   const sizes = {
     small: 'px-3 py-1.5 text-sm font-airbnb',
-    medium: 'px-4 py-2 text-[16px] font-semibold font-airbnb',
-    large: 'px-6 py-3 text-[16px] font-bold font-airbnb hover:text',
+    medium: 'px-4 py-2 text-[16px] font-airbnb font-meduim ',
+    large: 'px-6 py-3 text-[16px] font-airbnb font-bold  hover:text',
   };
 
   // Base classes

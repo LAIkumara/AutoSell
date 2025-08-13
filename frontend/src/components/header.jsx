@@ -1,6 +1,6 @@
 import { BiCart, BiPlus, BiPlusCircle } from "react-icons/bi";
 import { Link } from "react-router-dom";
-import Button from "./buttons/button";
+import Button from "./buttons";
 
 export default function Header(){
 

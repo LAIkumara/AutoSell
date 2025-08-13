@@ -33,15 +33,15 @@ export default function HeroSection() {
     return () => clearInterval(interval);
   }, [images.length]);
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-purple-100 via-purple-50 to-white">
+    <div className="relative overflow-hidden bg-gradient-to-br ">
       {/* Background decorative elements */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-96 h-96 bg-purple-200 rounded-full opacity-20 -translate-x-32 -translate-y-32"></div>
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-300 rounded-full opacity-15 translate-x-32 translate-y-32"></div>
       </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center justify-between min-h-[600px] py-12 lg:py-20">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        <div className="flex flex-col lg:flex-row items-center justify-between py-10 lg:py-14">
           
           {/* Left Content */}
           <div className="flex-1 max-w-xl lg:max-w-2xl text-center lg:text-left mb-12 lg:mb-0 lg:pr-12">
