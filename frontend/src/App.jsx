@@ -6,7 +6,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className=' w-full h-screen bg-amber-500 '>
+      <div>
         <Routes path="/">
           <Route path="/" element={<Home />} />
         </Routes>
