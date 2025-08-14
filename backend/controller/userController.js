@@ -4,13 +4,29 @@ import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 dotenv.config()
 
-export function createUser(req, res) {
+export async function createUser(req, res) {
+
+    const latestUser = await User.find().sort({ createdAt: -1 }).limit(1);
+    let userId = "US00101"
+
+    if (latestUser.length > 0) {
+        // Generate the next userID by incrementing the last userID
+        const lastUserID = latestUser[0].userID;
+        const lastUserIDWithoutPrefix = lastUserID.replace("US", "");
+        const lastUserIDInInteger = parseInt(lastUserIDWithoutPrefix);
+        const newUserIDInInteger = lastUserIDInInteger + 1;
+        const newUserIDWithoutPrefix = newUserIDInInteger
+            .toString()
+            .padStart(5, "0");
+        userId = "US" + newUserIDWithoutPrefix;
+    }
+
     const passwordHash = bcrypt.hashSync(req.body.password, 10);
 
     const userData = {
-        userID: req.body.userID,
+        userID: userId,
         userName: req.body.userName,
-        email: req.body.email,
+        email: req.body.email || null,
         password: passwordHash,
         phone: req.body.phone,
         isBlocked: req.body.isBlocked || false,

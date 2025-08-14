@@ -169,7 +169,7 @@ export default function SignupPage() {
               {/* Signup Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Username Field */}
-                <div>
+                {/* <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <User className="h-5 w-5 text-gray-400" />
@@ -184,10 +184,10 @@ export default function SignupPage() {
                     />
                   </div>
                   {errors.userName && <p className="mt-1 text-sm text-red-600">{errors.userName}</p>}
-                </div>
+                </div> */}
     
                 {/* Email Field */}
-                <div>
+                {/* <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
@@ -202,8 +202,28 @@ export default function SignupPage() {
                     />
                   </div>
                   {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                </div>
+                </div> */}
     
+
+                    
+                {/* Phone Field */}
+                <div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Phone className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Phone number"
+                      className={`w-full pl-10 px-4 py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 placeholder-gray-400`}
+                    />
+                  </div>
+                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+                </div>
+
                 {/* Password Field */}
                 <div>
                   <div className="relative">
@@ -230,26 +250,10 @@ export default function SignupPage() {
                   {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                 </div>
     
-                {/* Phone Field */}
-                <div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="Phone number"
-                      className={`w-full pl-10 px-4 py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 placeholder-gray-400`}
-                    />
-                  </div>
-                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-                </div>
+                
     
                 {/* Address Field */}
-                <div>
+                {/* <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <MapPin className="h-5 w-5 text-gray-400" />
@@ -263,7 +267,7 @@ export default function SignupPage() {
                       className="w-full pl-10 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                     />
                   </div>
-                </div>
+                </div> */}
     
                 {/* Terms and Conditions */}
                 <div className="flex items-start mt-4">
