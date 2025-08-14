@@ -54,16 +54,6 @@ export default function HeroSection() {
               Buy and sell everything from used cars to mobile phones and computers, 
               or search for property and more all over the world!
             </p>
-            
-            {/* CTA Buttons */}
-            {/* <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                Get Started
-              </button>
-              <button className="border-2 border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200">
-                Learn More
-              </button>
-            </div> */}
           </div>
           
           {/* Right Image */}

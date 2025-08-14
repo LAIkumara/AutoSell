@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Smartphone,
   Monitor,
@@ -11,9 +11,27 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const CategoryCard = ({ icon: Icon, title, count, isActive = false, hasViewLink = false }) => {
+import Button from "../components/buttons";
+import { BiSearch } from "react-icons/bi";
+import {
+  FaMobileAlt,
+  FaTv,
+  FaCar,
+  FaHome,
+  FaBox,
+  FaIndustry,
+  FaGraduationCap,
+} from "react-icons/fa";
+
+const CategoryCard = ({ icon: Icon, title, count,  hasViewLink = false }) => {
+
+  
+
   return (
     <div className="flex flex-col justify-center items-center hover:bg-white rounded-lg p-6 border-gray-100 hover:shadow-md transition-all duration-300 group cursor-pointer">
+
+        
+
       {/* Icon */}
       <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-[#E8C6F7] text-[#5D0599] group-hover:bg-[#5D0599] group-hover:text-white transition-all duration-300">
         <Icon />
@@ -102,9 +120,44 @@ const CategoryCards = () => {
     }
   ];
 
+
+  const [value, setValue] = useState("");
+  
+    const handleSearchChange = (e) => {
+      setValue(e.target.value);
+    };
+  
+    const handleSearchSubmit = (e) => {
+      e.preventDefault();
+      console.log("Search submitted:", value);
+    };
+
   return (
     <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto flex flex-col gap-8 ">
+
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 ">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
+            <div className="w-full sm:flex-1 max-w-[800px]">
+              <input
+                type="text"
+                value={value}
+                onChange={handleSearchChange}
+                className="w-full text-sm outline-none pl-3 h-12 sm:h-[45px] border-2 border-[#AA66D9] rounded-md"
+                placeholder="Search ads..."
+              />
+            </div>
+            <Button
+              variant="primary"
+              size="large"
+              onClick={handleSearchSubmit}  // Changed from onChange to onClick
+              className="w-full sm:w-auto px-6 flex justify-center items-center gap-2"
+            >
+              <BiSearch className="text-xl" /> 
+              <span>Search</span>
+            </Button>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category, index) => (

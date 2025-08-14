@@ -14,7 +14,7 @@ const Button = ({
 }) => {
   // Define color variants
   const variants = {
-    primary: 'bg-[#5D0599] text-white hover:bg-white hover:text-[#5D0599] hover:border-[#5D0599] hover:border-2 cursor-pointer',
+    primary: 'bg-[#5D0599] text-white hover:bg-white hover:text-[#5D0599] hover:border-[#5D0599] hover:border-2 cursor-pointer break-inside-auto transition ease-out duration-700',
     primary2: 'bg-white/10 text-white hover:bg-white hover:text-[#5D0599] cursor-pointer transition ease-out duration-700',
     secondary: 'bg-[#FFD500] text-[#5D0599] hover:bg-[#FFD500]/40 hover:text-white cursor-pointer transition ease-out duration-700',
     // success: 'bg-green-600 hover:bg-green-700 text-white',
