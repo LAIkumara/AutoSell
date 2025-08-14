@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowRight, Monitor, User, Mail, Phone, MapPin } from 'lucide-react';
 import Button from '../components/buttons';
 import Header from '../components/header';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function SignupPage() {
+
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    userName: '',
     email: '',
-    password: '',
-    phone: '',
-    address: ''
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -26,7 +28,6 @@ export default function SignupPage() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.userName.trim()) newErrors.userName = 'Username is required';
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
@@ -36,9 +37,6 @@ export default function SignupPage() {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -53,6 +51,21 @@ export default function SignupPage() {
       setIsLoading(false);
       console.log('Signup data:', formData);
     }, 2000);
+
+    axios.post(import.meta.env.VITE_BACKEND_URL + '/api/auth/user/singup', {
+      email: formData.email,
+      password: formData.password,
+    })
+      .then((response) => {
+        console.log("Signup successful:", response.data);
+        toast.success("Signup successful");
+        navigate("/singIn");
+        // Redirect or perform further actions here
+      })
+      .catch((error) => {
+        console.error("Signup error:", error);
+        toast.error("Signup failed: " + (error.response?.data?.message || "Unknown error"));
+      })
   };
 
   return (
@@ -187,7 +200,7 @@ export default function SignupPage() {
                 </div> */}
     
                 {/* Email Field */}
-                {/* <div>
+                <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail className="h-5 w-5 text-gray-400" />
@@ -202,12 +215,12 @@ export default function SignupPage() {
                     />
                   </div>
                   {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                </div> */}
+                </div>
     
 
                     
                 {/* Phone Field */}
-                <div>
+                {/* <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Phone className="h-5 w-5 text-gray-400" />
@@ -222,7 +235,7 @@ export default function SignupPage() {
                     />
                   </div>
                   {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-                </div>
+                </div> */}
 
                 {/* Password Field */}
                 <div>
@@ -290,7 +303,8 @@ export default function SignupPage() {
                 {/* Sign Up Button */}
                 <div className="flex items-center justify-center pt-2">
                   <Button 
-                    className="flex items-center justify-center gap-2 w-full" 
+                    className="flex items-center justify-center gap-2 w-full"
+                    onClick={handleSubmit}
                     type="submit"
                     variant="primary" 
                     size="large" 

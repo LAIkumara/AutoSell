@@ -14,20 +14,14 @@ const Button = ({
 }) => {
   // Define color variants
   const variants = {
-    primary: 'bg-[#5D0599] text-white hover:bg-white hover:text-[#5D0599] hover:border-[#5D0599] hover:border-2 cursor-pointer break-inside-auto transition ease-out duration-700',
-    primary2: 'bg-white/10 text-white hover:bg-white hover:text-[#5D0599] cursor-pointer transition ease-out duration-700',
-    secondary: 'bg-[#FFD500] text-[#5D0599] hover:bg-[#FFD500]/40 hover:text-white cursor-pointer transition ease-out duration-700',
-    // success: 'bg-green-600 hover:bg-green-700 text-white',
-    // danger: 'bg-red-600 hover:bg-red-700 text-white',
-    // warning: 'bg-yellow-500 hover:bg-yellow-600 text-white',
-    // info: 'bg-cyan-600 hover:bg-cyan-700 text-white',
-    // outline: 'border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-transparent',
-    // ghost: 'text-blue-600 hover:bg-blue-50',
+    primary: 'group relative px-6 py-3 bg-[#5D0599] text-white border-2 border-transparent hover:border-[#5D0599] hover:bg-white hover:text-[#5D0599] cursor-pointer break-inside-auto transition-all duration-700 ease-out',
+    primary2: 'group relative px-6 py-3 bg-white/10 text-white border-2 border-transparent hover:border-[#5D0599] hover:bg-white hover:text-[#5D0599] cursor-pointer transition-all duration-700 ease-out',
+    secondary: 'group relative px-6 py-3 bg-[#FFD500] text-[#5D0599] border-2 border-transparent hover:border-[#FFD500] hover:bg-[#FFD500]/40 hover:text-white cursor-pointer transition-all duration-700 ease-out',
   };
+  
 
   // Define size variants
   const sizes = {
-    small: 'px-3 py-1.5 text-sm font-airbnb',
     medium: 'px-4 py-2 text-[16px] font-airbnb font-meduim ',
     large: 'px-6 py-3 text-[16px] font-airbnb font-bold  hover:text',
   };

@@ -1,40 +1,29 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowRight, Monitor, Mail } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Monitor } from 'lucide-react';
 import Button from '../components/buttons';
 import Header from '../components/header';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
- 
-  function login(e){
-
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-
-    
-    axios.post(import.meta.env.VITE_BACKEND_URL + '/api/auth/user/login', {
+  function login(){
+    axios.post(import.meta.env.VITE_API_URL + '/api/auth/user/login', {
       email: email,
       password: password
     }).then((response) => {
       console.log(response.data)
       localStorage.setItem("token", response.data.token);
+
       toast.success("Login successful");
 
       if(response.data.user.role === "admin"){
-        navigate("/admin/adminDashboard");
+        navigate("/admin/dashboard");
       }
       else if(response.data.user.role === "customer"){
         navigate("/client/clientProfile");
@@ -45,8 +34,6 @@ export default function LoginPage() {
       toast.error("Login failed. Please check your credentials.");
     });
   }
-
-
 
   return (
     <>
@@ -168,23 +155,20 @@ export default function LoginPage() {
             {/* Email/Password Form */}
             <div className="space-y-4">
               {/* Email Field */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+              <div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email address"
-                  className="w-full pl-10 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 placeholder-gray-400 pr-12"
+                  placeholder="Username or email address"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                 />
               </div>
   
               {/* Password Field */}
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type='password'
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
@@ -195,11 +179,7 @@ export default function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors duration-200" />
-                  ) : (
-                    <Eye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors duration-200" />
-                  )}
+                  
                 </button>
               </div>
   
@@ -226,16 +206,7 @@ export default function LoginPage() {
                   onClick={login} 
                   variant="primary" 
                   size="large" 
-                  disabled={isLoading}
                 >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      Sign In
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
                 </Button>
               </div>
   
