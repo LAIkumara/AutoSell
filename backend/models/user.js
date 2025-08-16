@@ -7,8 +7,7 @@ const userSchema = mongoose.Schema({
         required: true,
     },
     userName: {
-        type: String,  
-        required: false,
+        type: String
     },
     email: {
         type: String,
@@ -22,8 +21,7 @@ const userSchema = mongoose.Schema({
     },
     phone: {
         type: String,
-        required: false,
-        match: /^\d{10}$/, // Matches a 10-digit phone number
+        match: /^\d{10}$/
     },
     isBlocked:{
         type: Boolean,

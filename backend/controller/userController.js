@@ -25,10 +25,10 @@ export async function createUser(req, res) {
 
     const userData = {
         userID: userId,
-        userName: req.body.userName,
+        userName: req.body.userName || "No name",
         email: req.body.email || null,
         password: passwordHash,
-        phone: req.body.phone,
+        phone: req.body.phone || null,
         isBlocked: req.body.isBlocked || false,
         role: req.body.role || "customer",
         isEmailVerified: req.body.isEmailVerified || false,
@@ -73,6 +73,7 @@ export function loginUser(req, res) {
                 if (isPasswordValid) {
                     const token = jwt.sign(
                         {
+                            userID: user.userID,
                             email: user.email,
                             userName: user.userName,
                             email: user.email,
@@ -126,10 +127,31 @@ export function getUserData(req, res) {
         }); 
     }else{
         res.json(req.user);
-        console.log("User data retrieved successfully");
     }
 
 }
+
+export async function updateUser(req, res) {
+    const userId = req.params.userID;
+    const updatedData = req.body;
+
+    try{
+        await User.updateOne({
+            userID: userId
+        }, updatedData)
+        res.json({
+            message: "User data updated successfully",
+            user: updatedData
+        });
+    }catch (error) {
+        res.status(500).json({
+            message: "Error updating user data",
+            error: error.message
+        });
+    }
+}
+
+
 
 
 export function isAdmin(req){

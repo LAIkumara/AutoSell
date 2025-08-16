@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Header from "../components/header";
 import HeroSection from "../components/homeHeroSection";
 import Button from "../components/buttons";

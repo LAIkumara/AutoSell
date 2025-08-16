@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BiCart, BiPlus, BiPlusCircle, BiMenu, BiX } from "react-icons/bi";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "./buttons";
-import AuthModal from './popupModal';
+import AuthModal from './popupmodels/signin_singup_popup';
 
 export default function Header() {
     const Navigate = useNavigate();
