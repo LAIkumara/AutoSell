@@ -134,6 +134,7 @@ export default function UserProfile() {
         setEditFormData({
           userID: response.data.userID || '',
           userName: response.data.userName || '',
+          email: response.data.email || '', // ADD THIS LINE
           phone: response.data.phone || '',
           address: response.data.address || '',
           profilePic: response.data.profilePic || ''
@@ -195,16 +196,13 @@ export default function UserProfile() {
       }
   
       const updatedData = {
-        userID: editFormData.userID,
         userName: editFormData.userName,
-        email: editFormData.email,
         phone: editFormData.phone,
         address: editFormData.address,
         profilePic: updatedProfilePic
       };
   
-      // Move everything inside the promise chain
-      axios.put(
+      const response = await axios.put(
         import.meta.env.VITE_BACKEND_URL + '/api/auth/user/updateUserData/' + editFormData.userID, 
         updatedData,
         {
@@ -213,27 +211,29 @@ export default function UserProfile() {
             'Content-Type': 'application/json'
           }
         }
-      ).then((response) => {
-        console.log("Profile updated successfully:", response.data);
-        toast.success("Profile updated successfully!");
-        
-        // Update local userData state INSIDE the .then() block
-        setUserData(prev => ({
-          ...prev,
-          ...updatedData
-        }));
+      );
   
-        // Close modal and stop loading INSIDE the .then() block
-        setShowEditModal(false);
-        setIsUpdating(false);
-        
-      }).catch((error) => {
-        console.error("Error updating profile:", error.response || error.message);
-        toast.error("Failed to update user details. Please try again.");
-        setIsUpdating(false);
-        // Don't close modal on error so user can try again
+      console.log("Profile updated successfully:", response.data);
+      toast.success("Profile updated successfully!");
+      
+      // Update local userData state with the updated data
+      setUserData(prev => ({
+        ...prev,
+        ...updatedData
+      }));
+  
+      // Update editFormData to reflect the new values
+      setEditFormData({
+        userName: updatedData.userName,
+        phone: updatedData.phone,
+        address: updatedData.address,
+        profilePic: updatedData.profilePic
       });
   
+      // Close modal and stop loading
+      setShowEditModal(false);
+      setIsUpdating(false);
+      
     } catch (error) {
       setIsUpdating(false);
       console.error("Error updating profile:", error.response || error.message);

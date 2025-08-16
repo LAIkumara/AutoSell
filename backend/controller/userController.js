@@ -74,9 +74,8 @@ export function loginUser(req, res) {
                     const token = jwt.sign(
                         {
                             userID: user.userID,
-                            email: user.email,
                             userName: user.userName,
-                            email: user.email,
+                            email: user.email, // REMOVED THE DUPLICATE EMAIL LINE
                             phone: user.phone,
                             role: user.role,
                             isEmailVerified: user.isEmailVerified,
@@ -92,9 +91,8 @@ export function loginUser(req, res) {
                         message: "Login successful",
                         token: token,
                         user: {
-                            email: user.email,
                             userName: user.userName,
-                            email: user.email,
+                            email: user.email, // REMOVED THE DUPLICATE EMAIL LINE HERE TOO
                             phone: user.phone,
                             role: user.role,
                         }
@@ -120,30 +118,80 @@ export function loginUser(req, res) {
 
 }
 
-export function getUserData(req, res) {
+// Option 1: Always fetch fresh data from database (Recommended)
+export async function getUserData(req, res) {
     if (req.user == null) {
         return res.status(403).json({
             message: "Unauthorized"
         }); 
-    }else{
-        res.json(req.user);
     }
 
+    try {
+        // Fetch fresh user data from database using userID from token
+        const userData = await User.findOne({ userID: req.user.userID });
+        
+        if (!userData) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        // Return fresh data from database (excluding password)
+        const { password, ...userDataWithoutPassword } = userData.toObject();
+        res.json(userDataWithoutPassword);
+        
+    } catch (error) {
+        res.status(500).json({
+            message: "Error fetching user data",
+            error: error.message
+        });
+    }
 }
 
+// Option 2: Update JWT token after profile update (Alternative approach)
 export async function updateUser(req, res) {
     const userId = req.params.userID;
     const updatedData = req.body;
 
-    try{
+    try {
+        // Update the user data
         await User.updateOne({
             userID: userId
-        }, updatedData)
-        res.json({
-            message: "User data updated successfully",
-            user: updatedData
-        });
-    }catch (error) {
+        }, updatedData);
+
+        // Fetch the updated user data
+        const updatedUser = await User.findOne({ userID: userId });
+        
+        if (updatedUser) {
+            // Generate new JWT token with updated data
+            const newToken = jwt.sign(
+                {
+                    userID: updatedUser.userID,
+                    userName: updatedUser.userName,
+                    email: updatedUser.email,
+                    phone: updatedUser.phone,
+                    role: updatedUser.role,
+                    isEmailVerified: updatedUser.isEmailVerified,
+                    profilePic: updatedUser.profilePic,
+                    address: updatedUser.address,
+                    isBlocked: updatedUser.isBlocked,
+                    createdAt: updatedUser.createdAt,
+                    updatedAt: updatedUser.updatedAt
+                },
+                process.env.JWT_SECRET,
+            );
+
+            res.json({
+                message: "User data updated successfully",
+                user: updatedData,
+                newToken: newToken // Send new token to frontend
+            });
+        } else {
+            res.status(404).json({
+                message: "User not found after update"
+            });
+        }
+    } catch (error) {
         res.status(500).json({
             message: "Error updating user data",
             error: error.message
