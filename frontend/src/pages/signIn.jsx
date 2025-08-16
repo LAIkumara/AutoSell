@@ -15,34 +15,32 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
  
-  function login(e){
-
+  function login(e) {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-
-    
+    setIsLoading(true); // Start loading when login is triggered
+  
     axios.post(import.meta.env.VITE_BACKEND_URL + '/api/auth/user/login', {
       email: email,
       password: password
-    }).then((response) => {
-      console.log(response.data)
+    })
+    .then((response) => {
+      console.log(response.data);
       localStorage.setItem("token", response.data.token);
       toast.success("Login successful");
-
-      if(response.data.user.role === "admin"){
+  
+      // Navigate based on user role
+      if (response.data.user.role == "admin") {
         navigate("/admin/adminDashboard");
+      } else if (response.data.user.role == "customer") {
+        navigate("/user/userProfile");
       }
-      else if(response.data.user.role === "customer"){
-        navigate("/client/clientProfile");
-      }
-  }
-    ).catch((error) => {
+    })
+    .catch((error) => {
       console.error(error);
       toast.error("Login failed. Please check your credentials.");
+    })
+    .finally(() => {
+      setIsLoading(false);
     });
   }
 
@@ -52,12 +50,7 @@ export default function LoginPage() {
     <>
         <Header/>
         <div className=" bg-gray-50 flex relative overflow-hidden bg-gradient-to-br  ">
-            {/* <div className="absolute inset-0">
-                <div className="absolute top-0 left-0 w-96 h-96 bg-purple-200 rounded-full opacity-20 -translate-x-32 -translate-y-32"></div>
-                <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-300 rounded-full opacity-15 translate-x-32 translate-y-32"></div>
-            </div> */}
-            
-        
+
         {/* Left Side - Features */}
         <div className="hidden lg:flex lg:w-1/2 bg-white p-12 flex-col justify-center">
         

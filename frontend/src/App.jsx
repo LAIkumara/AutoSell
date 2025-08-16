@@ -6,6 +6,8 @@ import ClientProfile from './pages/client/clientProfile'
 import AdminDashboard from './pages/admin/adminDashbord'
 import Header from './components/header'
 import SignUp from './pages/singUp'
+import { Toaster } from 'react-hot-toast'
+import AuthPopupModal from './components/popupModal'
 
 function App() {
 
@@ -20,12 +22,14 @@ function App() {
         
       </div> */}
         <div>
+        <Toaster position="top-center" />
           <Routes path="/">
             <Route path="/" element={<Home />} />
             <Route path="/singIn" element={<LoginPage />} />
             <Route path="/singUp" element={<SignUp />} />
-            <Route path="/client/clientProfile" element={<ClientProfile />} />
+            <Route path="/user/userProfile" element={<ClientProfile />} />
             <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
+            <Route path="/popup" element={<AuthPopupModal />} />
           </Routes>
         </div>
       </div>

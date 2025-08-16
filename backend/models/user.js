@@ -24,7 +24,6 @@ const userSchema = mongoose.Schema({
         type: String,
         required: false,
         match: /^\d{10}$/, // Matches a 10-digit phone number
-        
     },
     isBlocked:{
         type: Boolean,

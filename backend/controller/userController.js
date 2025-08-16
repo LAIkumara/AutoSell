@@ -118,3 +118,27 @@ export function loginUser(req, res) {
     })
 
 }
+
+export function getUserData(req, res) {
+    if (req.user == null) {
+        return res.status(403).json({
+            message: "Unauthorized"
+        }); 
+    }else{
+        res.json(req.user);
+        console.log("User data retrieved successfully");
+    }
+
+}
+
+
+export function isAdmin(req){
+    if(req.user == null){
+        return false
+    }
+    if(req.user.role == "admin"){
+        return true;
+    }else{
+        return false;
+    }
+}

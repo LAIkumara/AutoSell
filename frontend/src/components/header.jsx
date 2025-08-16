@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BiCart, BiPlus, BiPlusCircle, BiMenu, BiX } from "react-icons/bi";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "./buttons";
+import AuthModal from './popupModal';
 
 export default function Header() {
     const Navigate = useNavigate();
@@ -15,8 +16,20 @@ export default function Header() {
         setIsMenuOpen(false);
     };
 
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    
+      const handlePostAdsClick = () => {
+        setIsAuthModalOpen(true);
+      };
+    
+      const closeAuthModal = () => {
+        setIsAuthModalOpen(false);
+      };
+    
+
     return (
-        <header className="bg-[#5D0599] relative">
+        <>
+            <header className="bg-[#5D0599] relative">
             {/* Desktop Header */}
             <div className="hidden lg:flex h-[120px] justify-center items-center gap-[192px] px-4">
                 <Link to='/' className="h-[90px] w-[90px] flex items-center justify-center">
@@ -45,7 +58,7 @@ export default function Header() {
                     <Button onClick={() => Navigate('/singIn')} variant="primary2" size="large">
                         Sign In
                     </Button>
-                    <Button className="flex justify-center items-center text-[16px] gap-2" variant="secondary" size="large">
+                    <Button onClick={handlePostAdsClick} className="flex justify-center items-center text-[16px] gap-2" variant="secondary" size="large">
                         <BiPlusCircle className="text-2xl"/>
                         Post Ads
                     </Button>
@@ -62,7 +75,7 @@ export default function Header() {
                 {/* Mobile Actions */}
                 <div className="flex items-center gap-3">
                     {/* Post Ads Button - Mobile */}
-                    <Button className="flex justify-center items-center gap-1 px-3 py-2" variant="secondary" size="small">
+                    <Button onClick={handlePostAdsClick} className="flex justify-center items-center gap-1 px-3 py-2" variant="secondary" size="small">
                         <BiPlusCircle className="text-lg"/>
                         <span className="hidden sm:inline">Ads</span>
                     </Button>
@@ -158,13 +171,17 @@ export default function Header() {
                         className="w-full flex justify-center items-center text-[16px] gap-2" 
                         variant="secondary" 
                         size="large"
-                        onClick={closeMenu}
+                        onClick={handlePostAdsClick}
                     >
                         <BiPlusCircle className="text-2xl"/>
                         Post Ads
                     </Button>
                 </div>
             </div>
-        </header>
+            </header>
+
+            <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+        </>
+        
     );
 }
