@@ -7,7 +7,6 @@ import AdminDashboard from './pages/admin/adminDashbord'
 import Header from './components/header'
 import SignUp from './pages/singUp'
 import { Toaster } from 'react-hot-toast'
-import UserDetailsUpdatePopup from './components/popupmodels/userdetailsupdata_popup'
 
 function App() {
 
@@ -29,7 +28,6 @@ function App() {
             <Route path="/singUp" element={<SignUp />} />
             <Route path="/user/userProfile" element={<ClientProfile />} />
             <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
-            <Route path="/user/userProfile/edit" element={<UserDetailsUpdatePopup />} />
           </Routes>
         </div>
       </div>

@@ -253,15 +253,58 @@ export default function UserProfile() {
     });
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleProfilePicChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      setIsUploading(true);
+  
       setEditFormData(prev => ({
         ...prev,
         profilePic: file
       }));
+  
+      try {
+        // Assuming uploadUserProfileFile is a function that uploads the image
+        const uploadedProfilePicUrl = await uploadUserProfileFile(file);
+  
+        // Now update the profile with the new image URL
+        const updatedData = { profilePic: uploadedProfilePicUrl };
+        const token = localStorage.getItem("token");
+        if (token) {
+          await axios.put(
+            import.meta.env.VITE_BACKEND_URL + '/api/auth/user/updateUserData/' + userData.userID, 
+            updatedData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+  
+          // Update the userData state immediately with the new profile picture URL
+          setUserData(prev => ({
+            ...prev,
+            profilePic: uploadedProfilePicUrl
+          }));
+  
+          // Successfully updated profile picture
+          toast.success("Profile picture updated successfully!");
+        }
+      } catch (error) {
+        console.error("Error uploading profile picture:", error.message);
+        toast.error("Failed to upload profile picture. Please try again.");
+      } finally {
+        // Hide loading spinner once the process is complete
+        setIsUploading(false);
+      }
     }
   };
+  
+  
+  
 
   if (isLoading) {
     return (
@@ -304,7 +347,12 @@ export default function UserProfile() {
                 <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
                   <div className="relative">
                     <div className="w-32 h-32 bg-white rounded-full p-2">
-                      {userData.profilePic && userData.profilePic !== "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png" ? (
+                      {isUploading ? (
+                        // Show a loading spinner when uploading
+                        <div className="w-full h-full backdrop-blur-lg flex items-center justify-center rounded-full">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        </div>
+                      ) : userData.profilePic && userData.profilePic !== "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png" ? (
                         <img 
                           src={userData.profilePic} 
                           alt="Profile" 
@@ -316,15 +364,27 @@ export default function UserProfile() {
                         </div>
                       )}
                     </div>
+
+                    {/* New Profile Picture Button */}
                     <button 
-                      onClick={handleEditProfile}
+                      onClick={() => document.getElementById('file-input1').click()}
                       className="absolute bottom-2 right-2 w-8 h-8 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center text-white transition-colors"
                     >
                       <Camera className="w-4 h-4" />
                     </button>
+
+                    {/* Hidden File Input */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePicChange}
+                      id="file-input1"
+                      className="hidden"
+                    />
                   </div>
                 </div>
               </div>
+
 
               {/* Profile Details */}
               <div className="pt-20 pb-6 px-6">
@@ -621,16 +681,27 @@ export default function UserProfile() {
               />
             </div>
             
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
-              <input
+            {/* <div className="mb-6"> */}
+              {/* <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label> */}
+              
+              {/* Hidden file input */}
+              {/* <input
                 type="file"
                 accept="image/*"
                 onChange={handleProfilePicChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">Upload a new profile picture or leave empty to keep current</p>
-            </div>
+                id="file-input"
+                className="hidden"
+              /> */}
+              
+              {/* Camera icon that triggers file input */}
+              {/* <Camera
+                className="w-8 h-8 p-1 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+                onClick={() => document.getElementById('file-input').click()}
+              /> */}
+              
+              {/* <p className="text-xs text-gray-500 mt-1">Upload a new profile picture or leave empty to keep current</p> */}
+            {/* </div> */}
+
             
             <div className="flex justify-end space-x-2">
               <button
