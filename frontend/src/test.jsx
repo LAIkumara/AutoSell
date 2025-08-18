@@ -1,45 +1,21 @@
-const handleProfilePicChange = async (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    // Show loading spinner
-    setIsUploading(true);
+import Category from "../models/category.js";
 
-    // Set the file to the state (temporary, before submission)
-    setEditFormData(prev => ({
-      ...prev,
-      profilePic: file
-    }));
+export async function createCategory(req, res){
 
+    const category = new Category(req.body);
     try {
-      // Assuming uploadUserProfileFile is a function that uploads the image
-      const uploadedProfilePicUrl = await uploadUserProfileFile(file);
-
-      // Now update the profile with the new image URL
-      const updatedData = { profilePic: uploadedProfilePicUrl };
-
-      // Here, you can send the updated data to your backend API for saving
-      const token = localStorage.getItem("token");
-      if (token) {
-        await axios.put(
-          import.meta.env.VITE_BACKEND_URL + '/api/auth/user/updateUserData/' + userData.userID, 
-          updatedData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
+        const savedCategory = await category.save();
+        res.status(201).json(
+            savedCategory,{
+                message : "Category created successfully",
+                process : savedCategory
             }
-          }
+            
         );
-
-        // Successfully updated profile picture
-        toast.success("Profile picture updated successfully!");
-      }
-    } catch (error) {
-      console.error("Error uploading profile picture:", error.message);
-      toast.error("Failed to upload profile picture. Please try again.");
-    } finally {
-      // Hide loading spinner once the process is complete
-      setIsUploading(false);
+    }catch (error) {
+        res.status(500).json({
+            message: "Error creating category",
+            error: error.message
+        });
     }
-  }
-};
+}

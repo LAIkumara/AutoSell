@@ -1,175 +1,227 @@
 import mongoose from 'mongoose';
 
-const adSchema = new mongoose.Schema({
-  // Basic Ad Information
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 100
-  },
-  description: {
-    type: String,
-    maxlength: 2000
-  },
-  
-  category: {
-    type: String,
-    required: true,
-    enum: ['vehicles', 'real_estate', 'jobs', 'services', 'electronics', 'furniture', 'fashion', 'sports']
-  },
-  subcategory: {
-    type: String,
-    required: true
-  },
-  
-  attributes: {
-    // For Electronics > Mobile Phones
-    brand: { type: String }, // Apple, Samsung, etc.
-    model: { type: String }, // iPhone 15, Galaxy S24, etc.
-    storage: { type: String }, // 64GB, 128GB, etc.
-    color: { type: String },
-    
-    // For Vehicles
-    make: { type: String }, // Toyota, Honda, etc.
-    vehicleModel: { type: String },
-    year: { type: Number },
-    mileage: { type: Number },
-    fuelType: { type: String },
-    transmission: { type: String },
-    
-    // For Real Estate
-    propertyType: { type: String }, // apartment, house, land
-    bedrooms: { type: Number },
-    bathrooms: { type: Number },
-    area: { type: Number },
-    furnished: { type: String },
-    
-    // Generic attributes that can be used across categories
-    size: { type: String },
-    weight: { type: String },
-    material: { type: String }
-  },
-  
-  // Pricing
-  price: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  currency: {
-    type: String,
-    default: 'USD'
-  },
-  isNegotiable: {
-    type: Boolean,
-    default: false
-  },
-  
-  // Media
-  images: [{
-    url: { type: String, required: true },
-    altText: { type: String },
-    isPrimary: { type: Boolean, default: false }
-  }],
-  
-  // Location
-  location: {
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    country: { type: String, required: true },
-    zipCode: { type: String },
-    coordinates: {
-      latitude: { type: Number },
-      longitude: { type: Number }
+const advertisementSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100
     },
-    address: { type: String }
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 2000
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      required: true
+    },
+    // Additional category details for easier querying
+    categoryDetails: {
+      category_Id: {
+        type: String,
+        required: true
+      },
+      name: {
+        type: String,
+        required: true
+      },
+      altCategory_Name: {
+        type: [String],
+        default: null
+      },
+      category_BrandName: {
+        type: String,
+        default: null
+      },
+      categoryBrand_ModelName: {
+        type: String,
+        default: null
+      }
+    },
+    price: {
+      amount: {
+        type: Number,
+        required: true,
+        min: 0
+      },
+      currency: {
+        type: String,
+        default: 'USD',
+        uppercase: true
+      },
+      type: {
+        type: String,
+        enum: ['fixed', 'negotiable', 'auction', 'free'],
+        default: 'fixed'
+      }
+    },
+    images: [{
+      url: {
+        type: String,
+        required: true
+      },
+      alt: {
+        type: String,
+        default: ''
+      },
+      isPrimary: {
+        type: Boolean,
+        default: false
+      }
+    }],
+    location: {
+      city: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      state: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      country: {
+        type: String,
+        required: true,
+        trim: true,
+        default: 'Sri Lanka'
+      },
+      coordinates: {
+        latitude: {
+          type: Number,
+          min: -90,
+          max: 90
+        },
+        longitude: {
+          type: Number,
+          min: -180,
+          max: 180
+        }
+      },
+      address: {
+        type: String,
+        trim: true
+      }
+    },
+    contactInfo: {
+      phone: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      email: {
+        type: String,
+        trim: true,
+        lowercase: true
+      },
+      whatsapp: {
+        type: String,
+        trim: true
+      },
+      preferredContact: {
+        type: String,
+        enum: ['phone', 'email', 'whatsapp'],
+        default: 'phone'
+      }
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    status: {
+      type: String,
+      enum: ['active', 'pending', 'sold', 'expired', 'deleted', 'suspended'],
+      default: 'pending'
+    },
+    tags: [{
+      type: String,
+      trim: true,
+      lowercase: true
+    }],
+    adType: {
+      type: String,
+      enum: ['free', 'premium', 'featured', 'urgent', 'top'],
+      default: 'free'
+    },
+    analytics: {
+      views: {
+        type: Number,
+        default: 0
+      },
+      clicks: {
+        type: Number,
+        default: 0
+      },
+      favorites: {
+        type: Number,
+        default: 0
+      },
+      shares: {
+        type: Number,
+        default: 0
+      }
+    },
+    isNegotiable: {
+      type: Boolean,
+      default: true
+    },
+    condition: {
+      type: String,
+      enum: ['new', 'used'],
+      required: true
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['free', 'paid', 'pending', 'failed', 'refunded'],
+      default: 'free'
+    },
+    promotionExpiry: {
+      type: Date,
+      default: null
+    },
+    priority: {
+      type: Number,
+      default: 0, // Higher numbers = higher priority in listings
+      min: 0,
+      max: 100
+    },
+    // Moderation fields
+    moderationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    moderationNotes: {
+      type: String,
+      default: ''
+    },
+    // SEO and search optimization
+    metaTitle: {
+      type: String,
+      maxlength: 60
+    },
+    metaDescription: {
+      type: String,
+      maxlength: 160
+    }
   },
-  
-  // Contact Information
-  contact: {
-    phone: { type: String },
-    email: { type: String },
-    whatsapp: { type: String },
-    preferredContact: { type: String, enum: ['phone', 'email', 'whatsapp'] }
-  },
-  
-  // User Information
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  
-  // Ad Management
-  status: {
-    type: String,
-    enum: ['active', 'pending', 'sold', 'expired', 'suspended'],
-    default: 'pending'
-  },
-  condition: {
-    type: String,
-    enum: ['new', 'like_new', 'good', 'fair', 'poor'],
-    default: 'good'
-  },
-  
-  // SEO and Search
-  tags: [{ type: String }],
-  keywords: [{ type: String }],
-  
-  // Ad Types and Monetization
-  adType: {
-    type: String,
-    enum: ['free', 'premium', 'featured', 'urgent'],
-    default: 'free'
-  },
-  isFeatured: {
-    type: Boolean,
-    default: false
-  },
-  featuredUntil: { type: Date },
-  
-  // Payment
-  paymentStatus: {
-    type: String,
-    enum: ['free', 'paid', 'pending', 'failed'],
-    default: 'free'
-  },
-  paymentId: { type: String },
-  
-  // Analytics
-  views: {
-    type: Number,
-    default: 0
-  },
-  clicks: {
-    type: Number,
-    default: 0
-  },
-  
-  // Timestamps
-  datePosted: {
-    type: Date,
-    default: Date.now
-  },
-  lastUpdated: {
-    type: Date,
-    default: Date.now
-  },
-  expiresAt: {
-    type: Date,
-    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+  {
+    timestamps: true, // Automatically adds createdAt and updatedAt
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
-}, {
-  timestamps: true
-});
+);
 
-// Indexes for better performance 
-adSchema.index({ category: 1, subcategory: 1 });
-adSchema.index({ location: 1 });
-adSchema.index({ userId: 1 });
-adSchema.index({ status: 1, datePosted: -1 });
-adSchema.index({ isFeatured: -1, datePosted: -1 });
-adSchema.index({ 'attributes.brand': 1, 'attributes.model': 1 });
 
-module.exports = mongoose.model('Ad', adSchema);
+const Advertisement = mongoose.model('Advertisement', advertisementSchema);
+
+export default Advertisement;
