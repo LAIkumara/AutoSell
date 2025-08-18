@@ -7,7 +7,7 @@ import AdminDashboard from './pages/admin/adminDashbord'
 import Header from './components/header'
 import SignUp from './pages/singUp'
 import { Toaster } from 'react-hot-toast'
-import AdForm from './pages/client/adForm'
+import CreateAdvertisement from './components/createAdertisement'
 
 function App() {
 
@@ -29,7 +29,7 @@ function App() {
             <Route path="/singUp" element={<SignUp />} />
             <Route path="/user/userProfile" element={<ClientProfile />} />
             <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
-            <Route path="/adform" element={<AdForm/>}/>
+            <Route path="/createAdvertisment" element={<CreateAdvertisement/>}/>
           </Routes>
         </div>
       </div>

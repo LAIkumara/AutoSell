@@ -28,7 +28,7 @@ import {
   X
 } from 'lucide-react';
 import Header from '../../components/header';
-import uploadUserProfileFile from '../../utils/userProfileImages';
+import uploadFile from '../../utils/uploadFile';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 export default function UserProfile() {
@@ -192,7 +192,7 @@ export default function UserProfile() {
       
       // If profilePic is a file, upload it
       if (editFormData.profilePic && editFormData.profilePic instanceof File) {
-        updatedProfilePic = await uploadUserProfileFile(editFormData.profilePic);
+        updatedProfilePic = await uploadFile( 'user-profile-images' ,editFormData.profilePic);
       }
   
       const updatedData = {
@@ -266,8 +266,8 @@ export default function UserProfile() {
       }));
   
       try {
-        // Assuming uploadUserProfileFile is a function that uploads the image
-        const uploadedProfilePicUrl = await uploadUserProfileFile(file);
+        // Assuming uploadFile is a function that uploads the image
+        const uploadedProfilePicUrl = await uploadFile( 'user-profile-images',file);
   
         // Now update the profile with the new image URL
         const updatedData = { profilePic: uploadedProfilePicUrl };
@@ -303,7 +303,16 @@ export default function UserProfile() {
     }
   };
   
-  
+  const handleCreateAd = () => {
+    // Navigate to the create ad page with authentication check
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate('/createAdvertisment');
+    } else {
+      toast.error("You need to be logged in to create an ad.");
+      navigate('/signIn');
+    }
+  }
   
 
   if (isLoading) {
@@ -478,7 +487,7 @@ export default function UserProfile() {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-gray-900">My Listings</h2>
-                  <button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105 shadow-lg">
+                  <button onClick={(handleCreateAd)} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105 shadow-lg">
                     <Plus className="w-5 h-5" />
                     <span>Create Ad</span>
                   </button>

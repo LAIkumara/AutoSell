@@ -6,6 +6,7 @@ import jwt, { decode } from "jsonwebtoken"
 import cors from "cors";
 import categoryRouter from './routers/categoryRouter.js';
 import userRouter from './routers/userRouter.js';
+import advertisementRouter from './routers/advertisementRouter.js';
 
 dotenv.config();
 
@@ -54,6 +55,8 @@ mongoose.connect(connectionString).then(()=>{
 
 app.use("/api/auth/category", categoryRouter);
 app.use("/api/auth/user", userRouter);
+app.use("/api/auth/advertisement", advertisementRouter);
+
 app.listen(3000, ()=>{
     console.log("Server is running on port 3000")
 })
