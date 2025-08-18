@@ -65,5 +65,19 @@ export async function createAdvertisement(req, res) {
 }
 
 export async function getAdvertisements(req, res) {
-    
+    try {
+        const advertisements = await Advertisement.find().sort({ createdAt: -1 });
+        
+        res.status(200).json({
+            success: true,
+            data: advertisements
+        });
+    } catch (error) {
+        console.error("Error fetching advertisements:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching advertisements",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
 }

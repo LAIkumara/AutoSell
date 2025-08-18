@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { 
@@ -28,11 +28,10 @@ import {
   X
 } from 'lucide-react';
 import Header from '../../components/header';
-import  UploadFile  from '../../utils/uploadFile';
+import UploadFile from '../../utils/uploadFile';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 export default function UserProfile() {
-
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ads');
   const [isLoading, setIsLoading] = useState(true);
@@ -50,59 +49,128 @@ export default function UserProfile() {
     profilePic: ''
   });
 
-  // Sample ads data - you can replace this with actual API call later
-  const userAds = [
-    {
-      id: 1,
-      title: '2020 Toyota Camry XLE',
-      price: '$24,500',
-      category: 'Vehicles',
-      image: null,
-      status: 'Active',
-      views: 245,
-      likes: 18,
-      postedDate: '2024-01-10',
-      description: 'Excellent condition, low mileage, fully loaded with premium features.'
-    },
-    {
-      id: 2,
-      title: 'iPhone 14 Pro Max 256GB',
-      price: '$899',
-      category: 'Electronics',
-      image: null,
-      status: 'Sold',
-      views: 156,
-      likes: 12,
-      postedDate: '2024-01-08',
-      description: 'Like new condition, comes with original box and accessories.'
-    },
-    {
-      id: 3,
-      title: 'Modern 3BR Apartment for Rent',
-      price: '$2,800/mo',
-      category: 'Real Estate',
-      image: null,
-      status: 'Active',
-      views: 89,
-      likes: 7,
-      postedDate: '2024-01-05',
-      description: 'Beautiful apartment in downtown area with all amenities.'
-    },
-    {
-      id: 4,
-      title: 'Gaming Setup - RTX 3080',
-      price: '$1,899',
-      category: 'Electronics',
-      image: null,
-      status: 'Pending',
-      views: 134,
-      likes: 23,
-      postedDate: '2024-01-03',
-      description: 'High-end gaming PC with latest specifications.'
+  const [userAds, setUserAds] = useState([]);
+  const [isAdsLoading, setIsAdsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("You are not logged in. Please log in to view your profile.");
+      navigate('/signIn');
+      return;
     }
-  ];
+  }, [navigate]);
+
+  const getUserAds = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("You are not logged in. Please log in to view your ads.");
+      navigate('/signIn');
+      return [];
+    }
+  
+    setIsAdsLoading(true);
+    try {
+      const response = await axios.get(
+        import.meta.env.VITE_BACKEND_URL + '/api/auth/advertisement', 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      console.log("User ads fetched successfully:", response.data);
+      
+      // Handle different response structures
+      let adsData = [];
+      if (Array.isArray(response.data)) {
+        adsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        adsData = response.data.data;
+      } else if (response.data && Array.isArray(response.data.ads)) {
+        adsData = response.data.ads;
+      } else {
+        console.warn("Unexpected response structure:", response.data);
+        adsData = [];
+      }
+      
+      setUserAds(adsData);
+      return adsData;
+    } catch (error) {
+      console.error("Error fetching user ads:", error);
+      setUserAds([]); // Set empty array on error
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Session expired. Please log in again.");
+        navigate('/signIn');
+      } else {
+        toast.error("Failed to fetch user ads. Please try again.");
+      }
+      return [];
+    } finally {
+      setIsAdsLoading(false);
+    }
+  }, [navigate]);
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        setIsLoading(false);
+        console.error("No token found, user is not authenticated.");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          import.meta.env.VITE_BACKEND_URL + '/api/auth/user/userData',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        
+        console.log("User data fetched successfully:", response.data);
+        setUserData(response.data);
+        setEditFormData({
+          userID: response.data.userID || '',
+          userName: response.data.userName || '',
+          email: response.data.email || '',
+          phone: response.data.phone || '',
+          address: response.data.address || '',
+          profilePic: response.data.profilePic || ''
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error.response || error.message);
+        
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          toast.error("Session expired. Please log in again.");
+          navigate('/signIn');
+        } else {
+          toast.error("Failed to load user data. Please try again.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  // Fetch user ads after user data is loaded
+  useEffect(() => {
+    if (userData && !isAdsLoading) {
+      getUserAds();
+    }
+  }, [userData, getUserAds]);
 
   const getStatusColor = (status) => {
+    if (!status) return 'bg-gray-100 text-gray-800 border-gray-200';
+    
     switch (status.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-800 border-green-200';
       case 'sold': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -113,50 +181,22 @@ export default function UserProfile() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return 'N/A';
+    }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-  
-    if (token) {
-      axios.get(import.meta.env.VITE_BACKEND_URL + '/api/auth/user/userData', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      .then((response) => {
-        setUserData(response.data);
-        setEditFormData({
-          userID: response.data.userID || '',
-          userName: response.data.userName || '',
-          email: response.data.email || '', // ADD THIS LINE
-          phone: response.data.phone || '',
-          address: response.data.address || '',
-          profilePic: response.data.profilePic || ''
-        });
-        setIsLoading(false);
-        console.log("User data fetched successfully:", response.data);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        console.error("Error fetching user data:", error.response || error.message);
-  
-        if (error.response && error.response.status === 403) {
-          alert("Unauthorized access. Please log in again.");
-        }
-      });
-    } else {
-      setIsLoading(false);
-      console.error("No token found, user is not authenticated.");
-    }
-  }, []);
-
   const handleEditProfile = () => {
+    if (!userData) return;
+    
     setEditFormData({
       userID: userData.userID || '',
       userName: userData.userName || '',
@@ -192,7 +232,7 @@ export default function UserProfile() {
       
       // If profilePic is a file, upload it
       if (editFormData.profilePic && editFormData.profilePic instanceof File) {
-        updatedProfilePic = await UploadFile( 'user-profile-images' ,editFormData.profilePic);
+        updatedProfilePic = await UploadFile('user-profile-images', editFormData.profilePic);
       }
   
       const updatedData = {
@@ -222,89 +262,83 @@ export default function UserProfile() {
         ...updatedData
       }));
   
-      // Update editFormData to reflect the new values
-      setEditFormData({
-        userName: updatedData.userName,
-        phone: updatedData.phone,
-        address: updatedData.address,
-        profilePic: updatedData.profilePic
-      });
-  
-      // Close modal and stop loading
       setShowEditModal(false);
-      setIsUpdating(false);
       
     } catch (error) {
-      setIsUpdating(false);
       console.error("Error updating profile:", error.response || error.message);
-      toast.error("Failed to update user details. Please try again.");
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Session expired. Please log in again.");
+        navigate('/signIn');
+      } else {
+        toast.error("Failed to update user details. Please try again.");
+      }
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleCloseModal = () => {
     setShowEditModal(false);
-    setEditFormData({
-      userID: userData.userID || '',
-      userName: userData.userName || '',
-      email: userData.email || '',
-      phone: userData.phone || '',
-      address: userData.address || '',
-      profilePic: userData.profilePic || ''
-    });
+    if (userData) {
+      setEditFormData({
+        userID: userData.userID || '',
+        userName: userData.userName || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        address: userData.address || '',
+        profilePic: userData.profilePic || ''
+      });
+    }
   };
-
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleProfilePicChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setIsUploading(true);
-  
-      setEditFormData(prev => ({
-        ...prev,
-        profilePic: file
-      }));
-  
-      try {
-        // Assuming uploadFile is a function that uploads the image
-        const uploadedProfilePicUrl = await UploadFile( 'user-profile-images',file);
-  
-        // Now update the profile with the new image URL
-        const updatedData = { profilePic: uploadedProfilePicUrl };
-        const token = localStorage.getItem("token");
-        if (token) {
-          await axios.put(
-            import.meta.env.VITE_BACKEND_URL + '/api/auth/user/updateUserData/' + userData.userID, 
-            updatedData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
+    if (!file || !userData) return;
+
+    setIsUploading(true);
+
+    try {
+      // Upload the image
+      const uploadedProfilePicUrl = await UploadFile('user-profile-images', file);
+
+      // Update the profile with the new image URL
+      const updatedData = { profilePic: uploadedProfilePicUrl };
+      const token = localStorage.getItem("token");
+      
+      if (token) {
+        await axios.put(
+          import.meta.env.VITE_BACKEND_URL + '/api/auth/user/updateUserData/' + userData.userID, 
+          updatedData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
             }
-          );
-  
-          // Update the userData state immediately with the new profile picture URL
-          setUserData(prev => ({
-            ...prev,
-            profilePic: uploadedProfilePicUrl
-          }));
-  
-          // Successfully updated profile picture
-          toast.success("Profile picture updated successfully!");
-        }
-      } catch (error) {
-        console.error("Error uploading profile picture:", error.message);
-        toast.error("Failed to upload profile picture. Please try again.");
-      } finally {
-        // Hide loading spinner once the process is complete
-        setIsUploading(false);
+          }
+        );
+
+        // Update the userData state immediately with the new profile picture URL
+        setUserData(prev => ({
+          ...prev,
+          profilePic: uploadedProfilePicUrl
+        }));
+
+        toast.success("Profile picture updated successfully!");
       }
+    } catch (error) {
+      console.error("Error uploading profile picture:", error.message);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Session expired. Please log in again.");
+        navigate('/signIn');
+      } else {
+        toast.error("Failed to upload profile picture. Please try again.");
+      }
+    } finally {
+      setIsUploading(false);
     }
   };
   
   const handleCreateAd = () => {
-    // Navigate to the create ad page with authentication check
     const token = localStorage.getItem("token");
     if (token) {
       navigate('/createAdvertisment');
@@ -312,9 +346,9 @@ export default function UserProfile() {
       toast.error("You need to be logged in to create an ad.");
       navigate('/signIn');
     }
-  }
+  };
   
-
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -326,13 +360,20 @@ export default function UserProfile() {
     );
   }
 
+  // Error state
   if (!userData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <div className="text-gray-900 text-xl font-semibold mb-2">Error loading user data</div>
-          <div className="text-gray-600">Please try refreshing the page or log in again.</div>
+          <div className="text-gray-600 mb-4">Please try refreshing the page or log in again.</div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );
@@ -357,8 +398,7 @@ export default function UserProfile() {
                   <div className="relative">
                     <div className="w-32 h-32 bg-white rounded-full p-2">
                       {isUploading ? (
-                        // Show a loading spinner when uploading
-                        <div className="w-full h-full backdrop-blur-lg flex items-center justify-center rounded-full">
+                        <div className="w-full h-full backdrop-blur-lg flex items-center justify-center rounded-full bg-gray-200">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                         </div>
                       ) : userData.profilePic && userData.profilePic !== "https://digitalhealthskills.com/wp-content/uploads/2022/11/3da39-no-user-image-icon-27.png" ? (
@@ -374,10 +414,11 @@ export default function UserProfile() {
                       )}
                     </div>
 
-                    {/* New Profile Picture Button */}
+                    {/* Profile Picture Button */}
                     <button 
                       onClick={() => document.getElementById('file-input1').click()}
-                      className="absolute bottom-2 right-2 w-8 h-8 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center text-white transition-colors"
+                      disabled={isUploading}
+                      className="absolute bottom-2 right-2 w-8 h-8 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 rounded-full flex items-center justify-center text-white transition-colors"
                     >
                       <Camera className="w-4 h-4" />
                     </button>
@@ -389,18 +430,18 @@ export default function UserProfile() {
                       onChange={handleProfilePicChange}
                       id="file-input1"
                       className="hidden"
+                      disabled={isUploading}
                     />
                   </div>
                 </div>
               </div>
-
 
               {/* Profile Details */}
               <div className="pt-20 pb-6 px-6">
                 <div className="text-center mb-6">
                   <div className="flex items-center justify-center space-x-2 mb-2">
                     <h1 className="text-2xl font-bold text-gray-900">
-                      {userData.userName === "No name" ? userData.email.split('@')[0] : userData.userName}
+                      {userData.userName === "No name" ? userData.email?.split('@')[0] : userData.userName}
                     </h1>
                     {userData.isEmailVerified && (
                       <div className="relative group">
@@ -441,7 +482,7 @@ export default function UserProfile() {
 
                   <div className="flex items-start space-x-3 text-gray-600">
                     <MapPin className="w-5 h-5 text-purple-600 mt-0.5" />
-                    <span className="text-sm">{userData.address}</span>
+                    <span className="text-sm">{userData.address || 'No Address'}</span>
                   </div>
 
                   <div className="flex items-center space-x-3 text-gray-600">
@@ -456,12 +497,14 @@ export default function UserProfile() {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{userAds.length}</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {Array.isArray(userAds) ? userAds.length : 0}
+                    </div>
                     <div className="text-sm text-gray-600">Total Ads</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
-                      {userAds.filter(ad => ad.status.toLowerCase() === 'active').length}
+                      {Array.isArray(userAds) ? userAds.filter(ad => ad.status?.toLowerCase() === 'active').length : 0}
                     </div>
                     <div className="text-sm text-gray-600">Active Ads</div>
                   </div>
@@ -487,7 +530,10 @@ export default function UserProfile() {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold text-gray-900">My Listings</h2>
-                  <button onClick={(handleCreateAd)} className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105 shadow-lg">
+                  <button 
+                    onClick={handleCreateAd} 
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105 shadow-lg"
+                  >
                     <Plus className="w-5 h-5" />
                     <span>Create Ad</span>
                   </button>
@@ -529,112 +575,130 @@ export default function UserProfile() {
 
               {/* Ads Grid */}
               <div className="p-6">
-                {userAds.length === 0 ? (
+                {isAdsLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                    <div className="text-gray-600">Loading ads...</div>
+                  </div>
+                ) : Array.isArray(userAds) && userAds.length === 0 ? (
                   <div className="text-center py-12">
                     <Car className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No ads yet</h3>
                     <p className="text-gray-600 mb-6">Start selling by creating your first ad</p>
-                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 mx-auto transition-colors">
+                    <button 
+                      onClick={handleCreateAd}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 mx-auto transition-colors"
+                    >
                       <Plus className="w-5 h-5" />
                       <span>Create First Ad</span>
                     </button>
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 gap-6">
-                    {userAds
+                    {Array.isArray(userAds) ? userAds
                       .filter(ad => {
-                        if (activeTab === 'active') return ad.status.toLowerCase() === 'active';
-                        if (activeTab === 'sold') return ad.status.toLowerCase() === 'sold';
+                        if (activeTab === 'active') return ad.status?.toLowerCase() === 'active';
+                        if (activeTab === 'sold') return ad.status?.toLowerCase() === 'sold';
                         return true; // 'ads' tab shows all
                       })
                       .map((ad) => (
-                      <div key={ad.id} className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                        
-                        {/* Ad Image */}
-                        <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
-                          {ad.image ? (
-                            <img src={ad.image} alt={ad.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Car className="w-12 h-12 text-gray-400" />
+                        <div key={ad.id} className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                          
+                          {/* Ad Image */}
+                          {/* Ad Image - CORRECTED VERSION */}
+                          <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200">
+                            {ad.images && ad.images.length > 0 && ad.images[0].url ? (
+                              <img 
+                                src={ad.images[0].url} 
+                                alt={ad.images[0].altText || ad.title} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Car className="w-12 h-12 text-gray-400" />
+                              </div>
+                            )}
+                            
+                            {/* Status Badge */}
+                            <div className="absolute top-3 left-3">
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(ad.status)}`}>
+                                {ad.status || 'Unknown'}
+                              </span>
                             </div>
-                          )}
-                          
-                          {/* Status Badge */}
-                          <div className="absolute top-3 left-3">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(ad.status)}`}>
-                              {ad.status}
-                            </span>
+
+                            {/* Action Menu */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="w-8 h-8 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full flex items-center justify-center transition-colors">
+                                <MoreVertical className="w-4 h-4 text-gray-600" />
+                              </button>
+                            </div>
                           </div>
 
-                          {/* Action Menu */}
-                          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="w-8 h-8 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full flex items-center justify-center transition-colors">
-                              <MoreVertical className="w-4 h-4 text-gray-600" />
-                            </button>
-                          </div>
-                        </div>
+                          {/* Ad Content */}
+                          <div className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">{ad.title}</h3>
+                            </div>
+                            
+                            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{ad.description}</p>
+                            
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-2xl font-bold text-purple-600">{ad.price}</span>
+                              <span className="text-sm text-gray-500">{ad.category}</span>
+                            </div>
 
-                        {/* Ad Content */}
-                        <div className="p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">{ad.title}</h3>
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{ad.description}</p>
-                          
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-2xl font-bold text-purple-600">{ad.price}</span>
-                            <span className="text-sm text-gray-500">{ad.category}</span>
-                          </div>
-
-                          {/* Stats */}
-                          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                            <div className="flex items-center space-x-4">
+                            {/* Stats */}
+                            <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                              <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="w-4 h-4" />
+                                  <span>{ad.views || 0}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Heart className="w-4 h-4" />
+                                  <span>{ad.likes || 0}</span>
+                                </div>
+                              </div>
                               <div className="flex items-center space-x-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{formatDate(ad.postedDate)}</span>
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex space-x-2">
+                              <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1">
                                 <Eye className="w-4 h-4" />
-                                <span>{ad.views}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Heart className="w-4 h-4" />
-                                <span>{ad.likes}</span>
-                              </div>
+                                <span>View</span>
+                              </button>
+                              <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1">
+                                <Edit className="w-4 h-4" />
+                                <span>Edit</span>
+                              </button>
+                              <button className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                                <Share2 className="w-4 h-4" />
+                              </button>
                             </div>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="w-4 h-4" />
-                              <span>{formatDate(ad.postedDate)}</span>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="flex space-x-2">
-                            <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1">
-                              <Eye className="w-4 h-4" />
-                              <span>View</span>
-                            </button>
-                            <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-1">
-                              <Edit className="w-4 h-4" />
-                              <span>Edit</span>
-                            </button>
-                            <button className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                              <Share2 className="w-4 h-4" />
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )) : (
+                        <div className="text-center py-12">
+                          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error loading ads</h3>
+                          <p className="text-gray-600">Please try refreshing the page.</p>
+                        </div>
+                      )}
                   </div>
                 )}
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto backdrop-blur-lg bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-semibold">Update User Details</h2>
@@ -654,19 +718,9 @@ export default function UserProfile() {
                 value={editFormData.userName}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter your name"
               />
             </div>
-            
-            {/* <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={editFormData.email}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div> */}
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
@@ -676,10 +730,11 @@ export default function UserProfile() {
                 value={editFormData.phone}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter your phone number"
               />
             </div>
             
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
               <input
                 type="text"
@@ -687,30 +742,9 @@ export default function UserProfile() {
                 value={editFormData.address}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter your address"
               />
             </div>
-            
-            {/* <div className="mb-6"> */}
-              {/* <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label> */}
-              
-              {/* Hidden file input */}
-              {/* <input
-                type="file"
-                accept="image/*"
-                onChange={handleProfilePicChange}
-                id="file-input"
-                className="hidden"
-              /> */}
-              
-              {/* Camera icon that triggers file input */}
-              {/* <Camera
-                className="w-8 h-8 p-1 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
-                onClick={() => document.getElementById('file-input').click()}
-              /> */}
-              
-              {/* <p className="text-xs text-gray-500 mt-1">Upload a new profile picture or leave empty to keep current</p> */}
-            {/* </div> */}
-
             
             <div className="flex justify-end space-x-2">
               <button
