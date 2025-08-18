@@ -133,26 +133,47 @@ useEffect(() => {
   };
 
   const handleSubmit = async (e) => {
-
-    //set image data if needed
-    const promiseArray = [];
-    for (let i = 0; i < formData.images.length; i++) {
-
-      const promise = uploadFile('advertising-images' ,formData.images[i])
-      promiseArray[i] = promise;
-    }
-
-    const imageUrls = await Promise.all(promiseArray);
-    const advertisementData = {
-      ...formData,
-      images: imageUrls
-    }
-
     e.preventDefault();
     setIsLoading(true);
+    
     try {
+      // Upload images first
+      // Add this before the upload loop
+          if (formData.images.length === 0) {
+            toast.error('Please upload at least one image');
+            setIsLoading(false);
+            return;
+          }
+
+          if (formData.images.length > 5) {
+            toast.error('Maximum 5 images allowed');
+            setIsLoading(false);
+            return;
+          }
+
+      const imageUrls = [];
+      for (const file of formData.images) {
+        try {
+          const publicUrl = await uploadFile('advertising-images', file);
+          imageUrls.push({
+            url: publicUrl,
+            thumbnailUrl: publicUrl, // You can generate a thumbnail URL if needed
+            isPrimary: imageUrls.length === 0 // First image as primary
+          });
+        } catch (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          throw new Error(`Failed to upload image: ${file.name}`);
+        }
+      }
+  
+      // Prepare advertisement data with image URLs
+      const advertisementData = {
+        ...formData,
+        images: imageUrls
+      };
+  
+      // Submit the advertisement data
       const token = localStorage.getItem('token');
-      
       await axios.post(
         import.meta.env.VITE_BACKEND_URL + '/api/auth/advertisement',
         advertisementData,
@@ -163,13 +184,12 @@ useEffect(() => {
           }
         }
       );
+      
       toast.success('Advertisement created successfully!');
-      //redirect
       navigate('/user/userProfile');
-
     } catch (err) {
       console.error('Error creating advertisement:', err);
-      toast.error(err.response?.data?.message || 'Failed to create advertisement');
+      toast.error(err.response?.data?.message || err.message || 'Failed to create advertisement');
     } finally {
       setIsLoading(false);
     }
@@ -428,7 +448,7 @@ useEffect(() => {
               };
               fileInput.click();
             }}
-            className="absolute w-20 h-20 bg-purple-600 hover:bg-purple-700 rounded-2xl flex items-center justify-center text-white transition-colors"
+            className="absolute top w-20 h-20 bg-purple-600 hover:bg-purple-700 rounded-2xl flex items-center justify-center text-white transition-colors"
           >
             <Camera className="w-10 h-10" />
 

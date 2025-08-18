@@ -6,34 +6,28 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 // await uploadFile('user-profile-images', file);
 // await uploadFile('advertising-images', file);
-export async function uploadFile(bucketName, file) {
-  if (!file) {
-    throw new Error("No file selected");
-  }
-
-  const timestamp = new Date().getTime();
-  const filename = `${timestamp}_${file.name}`;
-
+export default async function UploadFile(bucketName, file) {
   try {
-    // Upload the file
-    const { error: uploadError } = await supabase.storage
+    const timestamp = new Date().getTime();
+    const fileName = `${timestamp}_${file.name}`;
+    
+    const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(filename, file, {
+      .upload(fileName, file, {
         cacheControl: '3600',
         upsert: false
       });
 
-    if (uploadError) throw uploadError;
+    if (error) throw error;
 
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from(bucketName)
-      .getPublicUrl(filename);
+      .getPublicUrl(data.path);
 
     return publicUrl;
   } catch (error) {
     console.error('Upload error:', error);
-    throw new Error("Failed to upload file. Please try again.");
+    throw error;
   }
 }
 

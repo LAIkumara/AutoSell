@@ -28,7 +28,7 @@ import {
   X
 } from 'lucide-react';
 import Header from '../../components/header';
-import uploadFile from '../../utils/uploadFile';
+import  UploadFile  from '../../utils/uploadFile';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 export default function UserProfile() {
@@ -192,7 +192,7 @@ export default function UserProfile() {
       
       // If profilePic is a file, upload it
       if (editFormData.profilePic && editFormData.profilePic instanceof File) {
-        updatedProfilePic = await uploadFile( 'user-profile-images' ,editFormData.profilePic);
+        updatedProfilePic = await UploadFile( 'user-profile-images' ,editFormData.profilePic);
       }
   
       const updatedData = {
@@ -267,7 +267,7 @@ export default function UserProfile() {
   
       try {
         // Assuming uploadFile is a function that uploads the image
-        const uploadedProfilePicUrl = await uploadFile( 'user-profile-images',file);
+        const uploadedProfilePicUrl = await UploadFile( 'user-profile-images',file);
   
         // Now update the profile with the new image URL
         const updatedData = { profilePic: uploadedProfilePicUrl };
