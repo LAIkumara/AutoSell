@@ -8,6 +8,7 @@ import Header from './components/header'
 import SignUp from './pages/singUp'
 import { Toaster } from 'react-hot-toast'
 import CreateAdvertisement from './components/createAdertisement'
+import CategoryManagement from './pages/admin/CategoryManagement'
 
 function App() {
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/user/userProfile" element={<ClientProfile />} />
             <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
             <Route path="/createAdvertisment" element={<CreateAdvertisement/>}/>
+            <Route path="/admin/categoryManagement" element={<CategoryManagement />} />
           </Routes>
         </div>
       </div>

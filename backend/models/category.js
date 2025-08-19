@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const categorySchema = new mongoose.Schema({
-  categoryName: {
+  category: {
     type: String,
     required: true,
     unique: true
@@ -9,18 +9,30 @@ const categorySchema = new mongoose.Schema({
   altCategories: [{
     name: {
       type: String,
-      unique: true
+      unique: true,
+      required: true
     },
     brands: [{
       name: {
         type: String,
-        unique: true
+        unique: true,
+        required: true
       },
-      models: [String]
+      models: [{
+        name: {
+          type: String,
+          required: true,
+          unique: true
+        },
+        submodels: [{
+          name: {
+            type: String
+          }
+        }]          
+      }]
     }]
   }]
-});
-
+})
 
 const Category = mongoose.model('Category', categorySchema);
 export default Category;
