@@ -102,8 +102,28 @@ const CategoryForm = ({ category, onSubmit, onClose }) => {
     setFormData({ ...formData, altCategories: newAltCategories });
   };
 
+  const addSubmodel = (altIndex, brandIndex, modelIndex) => {
+    const newAltCategories = [...formData.altCategories];
+    newAltCategories[altIndex].brands[brandIndex].models[modelIndex].submodels.push({ name: '' });
+    setFormData({ ...formData, altCategories: newAltCategories });
+  };
+  const removeSubmodel = (altIndex, brandIndex, modelIndex, submodelIndex) => {
+    const newAltCategories = [...formData.altCategories];
+    newAltCategories[altIndex].brands[brandIndex].models[modelIndex].submodels =
+      newAltCategories[altIndex].brands[brandIndex].models[modelIndex].submodels.filter((_, i) => i !== submodelIndex);
+    setFormData({ ...formData, altCategories: newAltCategories });
+  };
+  const updateSubmodel = (altIndex, brandIndex, modelIndex, submodelIndex, field, value) => {
+    const newAltCategories = [...formData.altCategories];
+    newAltCategories[altIndex].brands[brandIndex].models[modelIndex].submodels[submodelIndex] = {
+      ...newAltCategories[altIndex].brands[brandIndex].models[modelIndex].submodels[submodelIndex],
+      [field]: value
+    };
+    setFormData({ ...formData, altCategories: newAltCategories });
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 backdrop-blur-lg bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700" style={{ background: 'linear-gradient(135deg, #5D0599 0%, #7C3AED 100%)' }}>
@@ -223,7 +243,8 @@ const CategoryForm = ({ category, onSubmit, onClose }) => {
 
                               <div className="space-y-2">
                                 {brand.models?.map((model, modelIndex) => (
-                                  <div key={modelIndex} className="flex items-center gap-2">
+                                  <div key={modelIndex} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                    <div key={modelIndex} className="flex items-center gap-2">
                                     <input
                                       type="text"
                                       value={model.name}
@@ -238,6 +259,42 @@ const CategoryForm = ({ category, onSubmit, onClose }) => {
                                     >
                                       <Minus className="h-3 w-3" />
                                     </button>
+                                  </div>
+                                  {/* sub models */}
+                                  <div className="ml-4 mt-4">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h5 className="text-sm font-medium text-gray-600">Submodels</h5>
+                                        <button
+                                          type="button"
+                                          onClick={() => addSubmodel(altIndex, brandIndex, modelIndex)}
+                                          className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-all duration-200"
+                                        >
+                                          <Plus className="h-3 w-3 inline mr-1" />
+                                          Add Submodel
+                                        </button>
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        {model.submodels?.map((submodel, submodelIndex) => (
+                                          <div key={submodelIndex} className="flex items-center gap-2">
+                                            <input
+                                              type="text"
+                                              value={submodel.name}
+                                              onChange={(e) => updateSubmodel(altIndex, brandIndex, modelIndex, submodelIndex, 'name', e.target.value)}
+                                              className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                                              placeholder="Submodel name"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => removeSubmodel(altIndex, brandIndex, modelIndex, submodelIndex)}
+                                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-all duration-200"
+                                            >
+                                              <Minus className="h-3 w-3" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                        </div>
+                                      </div>
                                   </div>
                                 ))}
                               </div>

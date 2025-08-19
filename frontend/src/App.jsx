@@ -10,6 +10,7 @@ import { Toaster } from 'react-hot-toast'
 import CreateAdvertisement from './components/createAdertisement'
 import CategoryManagement from './pages/admin/CategoryManagement'
 
+
 function App() {
 
   return (

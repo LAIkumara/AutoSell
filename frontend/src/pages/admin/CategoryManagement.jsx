@@ -51,7 +51,7 @@ const CategoryManagement = () => {
   const handleDeleteCategory = async (categoryId) => {
     if (window.confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
       try {
-        await axios.get(
+        await axios.delete(
           import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${categoryId}`, {
           method: 'DELETE',
           headers: {
@@ -151,7 +151,7 @@ const CategoryManagement = () => {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 wrap-anywhere gap-6">
           {filteredCategories.map((category) => (
             <CategoryCard
               key={category._id}

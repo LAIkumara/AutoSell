@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2, ChevronDown, ChevronRight, Tag, Package, Layers } from 'lucide-react';
 
-const CategoryCard = ({ category, onEdit, onDelete, onSelect, isSelected }) => {
+const CategoryCard = ({ category, onEdit, onDelete,  isSelected }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const totalBrands = category.altCategories?.reduce((sum, alt) => sum + (alt.brands?.length || 0), 0) || 0;
-  const totalModels = category.altCategories?.reduce((sum, alt) => 
-    sum + (alt.brands?.reduce((brandSum, brand) => brandSum + (brand.models?.length || 0), 0) || 0), 0) || 0;
+  const totalModels = category.altCategories?.reduce((sum, alt) => sum + (alt.brands?.reduce((brandSum, brand) => brandSum + (brand.models?.length || 0), 0) || 0), 0) || 0;
+  const totalSubmodels = category.altCategories?.reduce((sum, alt) => 
+    sum + (alt.brands?.reduce((brandSum, brand) => brandSum + (brand.models?.reduce((modelSum, model) => modelSum + (model.submodels?.length || 0), 0) || 0), 0) || 0), 0) || 0;
 
   return (
     <div 
@@ -16,8 +17,8 @@ const CategoryCard = ({ category, onEdit, onDelete, onSelect, isSelected }) => {
       style={{ borderColor: isSelected ? '#5D0599' : undefined }}
     >
       {/* Card Header */}
-      <div className="p-6 pb-4">
-        <div className="flex items-start justify-between mb-4">
+      <div className="p-6 pb-4 ">
+        <div className="flex items-start justify-between mb-4 ">
           <div className="flex-1">
             <h3 className="text-xl font-bold text-gray-900 mb-2">{category.category}</h3>
             <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -33,6 +34,12 @@ const CategoryCard = ({ category, onEdit, onDelete, onSelect, isSelected }) => {
                 <Layers className="h-4 w-4" />
                 <span>{totalModels} Models</span>
               </div>
+              {/* display submodels */}
+              <div className="flex items-center gap-1">
+                <Layers className="h-4 w-4" />
+                <span>{totalSubmodels} Submodels</span>
+              </div>
+
             </div>
           </div>
           

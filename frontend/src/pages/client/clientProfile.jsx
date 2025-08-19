@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, use } from 'react';
 import axios from 'axios';
 import toast from "react-hot-toast";
 import { 
@@ -63,6 +63,7 @@ export default function UserProfile() {
     }
   }, [navigate]);
 
+  
   const getUserAds = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -70,34 +71,45 @@ export default function UserProfile() {
       navigate('/signIn');
       return [];
     }
+    if (!userData || !userData.userID) {
+      toast.error("User data not available. Please try again.");
+      return [];
+    }
   
     setIsAdsLoading(true);
     try {
-      const response = await axios.get(
-        import.meta.env.VITE_BACKEND_URL + '/api/auth/advertisement', 
+      
+      await axios.get(
+        import.meta.env.VITE_BACKEND_URL + `/api/auth/advertisement/${userData.userID}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
           }
         }
+      ).then((res)=> {
+        console.log("User ads fetched successfully:", res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching user ads:", error.response || error.message);
+      }
       );
-      console.log("User ads fetched successfully:", response.data);
+      
       
       // Handle different response structures
-      let adsData = [];
-      if (Array.isArray(response.data)) {
-        adsData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        adsData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.ads)) {
-        adsData = response.data.ads;
-      } else {
-        console.warn("Unexpected response structure:", response.data);
-        adsData = [];
-      }
+      // let adsData = [];
+      // if (Array.isArray(response.data)) {
+      //   adsData = response.data;
+      // } else if (response.data && Array.isArray(response.data.data)) {
+      //   adsData = response.data.data;
+      // } else if (response.data && Array.isArray(response.data.ads)) {
+      //   adsData = response.data.ads;
+      // } else {
+      //   console.warn("Unexpected response structure:", response.data);
+      //   adsData = [];
+      // }
       
-      setUserAds(adsData);
-      return adsData;
+      // setUserAds(adsData);
+      // return adsData;
     } catch (error) {
       console.error("Error fetching user ads:", error);
       setUserAds([]); // Set empty array on error
@@ -111,7 +123,7 @@ export default function UserProfile() {
     } finally {
       setIsAdsLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, userData]);
 
   // Fetch user data
   useEffect(() => {

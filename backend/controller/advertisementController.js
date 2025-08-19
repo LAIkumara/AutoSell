@@ -1,17 +1,14 @@
 import Advertisement from "../models/ads.js";
+import Category from "../models/category.js"; // Assuming the new category model is imported
 
 export async function createAdvertisement(req, res) {
-
     // Generate the next adId by incrementing the last adId
-    
     const latestAd = await Advertisement.find().sort({ createdAt: -1 }).limit(1);
     let adId = "AD000101";
 
     if (latestAd.length > 0) {
-        // Generate the next adId by incrementing the last adId
         const lastAdId = latestAd[0].adId;
         const lastAdIdWithoutPrefix = lastAdId.replace("AD", "");
-        // Convert to integer and increment
         const lastAdIdInInteger = parseInt(lastAdIdWithoutPrefix);
         const newAdIdInInteger = lastAdIdInInteger + 1;
         const newAdIdWithoutPrefix = newAdIdInInteger
@@ -19,7 +16,7 @@ export async function createAdvertisement(req, res) {
             .padStart(6, "0");
         adId = "AD" + newAdIdWithoutPrefix;
     }
-    
+
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -38,6 +35,49 @@ export async function createAdvertisement(req, res) {
             });
         }
 
+        // Validate category, altCategory, brand, model, and submodel existence
+        const { category, altCategory, brand, model, submodel } = req.body;
+
+        // Fetch category to check existence
+        const categoryData = await Category.findById(category);
+        if (!categoryData) {
+            return res.status(400).json({
+                message: "Invalid category selected"
+            });
+        }
+
+        // Fetch altCategory to check existence
+        const altCategoryData = categoryData.altCategories.find(ac => ac.name === altCategory);
+        if (!altCategoryData) {
+            return res.status(400).json({
+                message: "Invalid sub-category selected"
+            });
+        }
+
+        // Fetch brand to check existence
+        const brandData = altCategoryData.brands.find(b => b.name === brand);
+        if (!brandData) {
+            return res.status(400).json({
+                message: "Invalid brand selected"
+            });
+        }
+
+        // Fetch model to check existence
+        const modelData = brandData.models.find(m => m.name === model);
+        if (!modelData) {
+            return res.status(400).json({
+                message: "Invalid model selected"
+            });
+        }
+
+        // Validate submodel (optional)
+        if (submodel && !modelData.submodels.find(sm => sm.name === submodel)) {
+            return res.status(400).json({
+                message: "Invalid submodel selected"
+            });
+        }
+
+        // Prepare the advertisement data
         const advertisementData = {
             ...req.body,
             author: req.user.userID,
@@ -77,6 +117,39 @@ export async function getAdvertisements(req, res) {
         res.status(500).json({
             success: false,
             message: "Error fetching advertisements",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+}
+
+// Get advertisement by user ID
+export async function getAdvertisementById(req, res) {
+    const { userID } = req.params;
+    try {
+        const advertisements = await Advertisement.find({ 
+            $or: [
+                { 'author.authorId': userID },
+                { authorId: userID },
+                { author: userID }
+            ]
+        }).sort({ createdAt: -1 });
+                
+        if (advertisements.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No advertisements found for this user"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: advertisements
+        });
+    } catch (error) {
+        console.error("Error fetching advertisement by user ID:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching advertisement",
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
