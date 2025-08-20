@@ -9,6 +9,7 @@ import SignUp from './pages/singUp'
 import { Toaster } from 'react-hot-toast'
 import CreateAdvertisement from './components/createAdertisement'
 import CategoryManagement from './pages/admin/CategoryManagement'
+import Test from './test'
 
 
 function App() {
@@ -33,6 +34,8 @@ function App() {
             <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
             <Route path="/createAdvertisment" element={<CreateAdvertisement/>}/>
             <Route path="/admin/categoryManagement" element={<CategoryManagement />} />
+            {/* <Route path="/test" element={<Test/>} /> */}
+
           </Routes>
         </div>
       </div>

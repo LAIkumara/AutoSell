@@ -1,278 +1,404 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
+import UploadFile from "./utils/uploadFile";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
-  
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-  
-  componentDidCatch(error, errorInfo) {
-    this.setState({
-      error: error,
-      errorInfo: errorInfo
-    });
-    console.error("Error caught by boundary:", error, errorInfo);
-  }
-  
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="error-boundary">
-          <h2>Something went wrong.</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo.componentStack}
-          </details>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+export default function Test() {
 
-// Main Component with Error Handling
-const CreateAdvertisement = () => {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    altCategory: '',
-    brand: '',
-    model: '',
-    submodel: '',
-    price: 0,
-    isNegotiable: false,
-    images: [],
-    condition: 'used',
-    location: { city: '', state: '' },
-    contactInfo: { phone: '', email: '', whatsapp: '' },
-    tags: [],
-    adType: 'standard'
-  });
+  const [adId, setAdId] = useState("")
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [altCategory, setAltCategory] = useState("");
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [submodel, setSubmodel] = useState("");
+  const [year, setYear] = useState("");
+  const [images, setImages] = useState([]);
+  const [condition, setCondition] = useState("");
+  const [location, setLocation] = useState({ city: "", state: "" });
+  const [contactInfo, setContactInfo] = useState({ phone: "", email: "", whatsapp: "" });
+  const [price, setPrice] = useState("");
+  const [isNegotiable, setIsNegotiable] = useState(false);
+  const [tags, setTags] = useState([]);
+  const [adType, setAdType] = useState("standard");
+  const [status, setStatus] = useState("pending");
+  const [author, setAuthor] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [categories, setCategories] = useState([]);
-  const [altCategories, setAltCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [models, setModels] = useState([]);
-  const [submodels, setSubmodels] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const [categoryData, setCategoryData] = useState([]);
+  const [altCategoryData, setAltCategoryData] = useState([]);
+  const [brandData, setBrandData] = useState([]);
+  const [modelData, setModelData] = useState([]);
+  const [submodelData, setSubmodelData] = useState([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        setIsLoading(true);
-        // Simulating API call - replace with your actual API endpoint
-        const mockCategories = [
-          { _id: '1', category: 'Electronics', altCategories: [] },
-          { _id: '2', category: 'Vehicles', altCategories: [] },
-          { _id: '3', category: 'Property', altCategories: [] },
-        ];
-        
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setCategories(mockCategories);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError('Failed to load categories. Please try again later.');
-      } finally {
-        setIsLoading(false);
+        const response = await axios.get(import.meta.env.VITE_BACKEND_URL + '/api/auth/category');
+        setCategoryData(response.data);
+        console.log("Categories fetched:", response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
       }
     };
-    
+
     fetchCategories();
   }, []);
 
-  // Debug information
-  useEffect(() => {
-    console.log('Categories:', categories);
-    console.log('Type of categories:', typeof categories);
-    console.log('Is array:', Array.isArray(categories));
-  }, [categories]);
+  const handleCategoryChange = async (e) => {
+    const selectedCategory = e.target.value;
+    setCategory(selectedCategory);
+    
+    // Reset dependent dropdowns
+    setAltCategory("");
+    setBrand("");
+    setModel("");
+    setSubmodel("");
+    setAltCategoryData([]);
+    setBrandData([]);
+    setModelData([]);
+    setSubmodelData([]);
+    
+    if (!selectedCategory) return;
+    
+    try {
+      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${selectedCategory}/altCategories`);
+      // If backend returns the whole category document, extract altCategories
+      const altCategories = response.data.altCategories || response.data;
+      setAltCategoryData(altCategories);
+    } catch (error) {
+      console.error("Error fetching alternative categories:", error);
+    }
+  }
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+  const handleAltCategoryChange = async (e) => {
+    const selectedAltCategory = e.target.value;
+    setAltCategory(selectedAltCategory);
+    
+    // Reset dependent dropdowns
+    setBrand("");
+    setModel("");
+    setSubmodel("");
+    setBrandData([]);
+    setModelData([]);
+    setSubmodelData([]);
+    
+    if (!selectedAltCategory) return;
+    
+    try {
+      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${category}/altCategories/${selectedAltCategory}/brands`);
+      // If backend returns the whole structure, extract brands
+      const brands = response.data.brands || response.data;
+      setBrandData(brands);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+    }
+  }
 
-  const handleNestedChange = (parent, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: { ...prev[parent], [field]: value }
-    }));
-  };
+  const handleBrandChange = async (e) => {
+    const selectedBrand = e.target.value;
+    setBrand(selectedBrand);
+    
+    // Reset dependent dropdowns
+    setModel("");
+    setSubmodel("");
+    setModelData([]);
+    setSubmodelData([]);
+    
+    if (!selectedBrand) return;
+    
+    try {
+      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${category}/altCategories/${altCategory}/brands/${selectedBrand}/models`);
+      // If backend returns the whole structure, extract models
+      const models = response.data.models || response.data;
+      setModelData(models);
+    } catch (error) {
+      console.error("Error fetching models:", error);
+    }
+  }
+
+  const handleModelChange = async (e) => {
+    const selectedModel = e.target.value;
+    setModel(selectedModel);
+    
+    // Reset dependent dropdown
+    setSubmodel("");
+    setSubmodelData([]);
+    
+    if (!selectedModel) return;
+    
+    try {
+      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${category}/altCategories/${altCategory}/brands/${brand}/models/${selectedModel}/submodels`);
+      // If backend returns the whole structure, extract submodels
+      const submodels = response.data.submodels || response.data;
+      setSubmodelData(submodels);
+    } catch (error) {
+      console.error("Error fetching submodels:", error);
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const imageUrls = await UploadFile(images);
+      const adData = {
+        adId: adId,
+        title: title,
+        description: description,
+        category: category,
+        altCategory: altCategory,
+        brand: brand,
+        model: model,
+        submodel: submodel,
+        year: year,
+        images: imageUrls,
+        condition: condition,
+        location: location,
+        contactInfo: contactInfo,
+        price: price,
+        isNegotiable: isNegotiable,
+        tags: tags,
+        adType: adType,
+        status: status,
+      };
+
+      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/auth/advertisement', adData);
+      console.log("Advertisement created:", response.data);
+      setAdId(response.data._id);
+      toast.success("Advertisement created successfully!");
+      navigate("/advertisements");
+    } catch (error) {
+      console.error("Error creating advertisement:", error);
+      toast.error("Failed to create advertisement.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-8">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Create New Advertisement</h1>
-                <p className="text-gray-600 mt-2">Fill in the details below to list your item</p>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                <span className="ml-3 text-gray-600">Loading categories...</span>
-              </div>
-            ) : (
-              <form className="space-y-8">
-                {/* Category Information */}
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">Category Information</h2>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div className="lg:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Category*</label>
-                      {categories && Array.isArray(categories) ? (
-                        <select
-                          name="category"
-                          value={formData.category}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                          required
-                        >
-                          <option value="">Select Category</option>
-                          {categories.map(cat => (
-                            <option key={cat._id} value={cat._id}>{cat.category}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="text-red-500 text-sm">
-                          Categories data is not available. Please check the console for details.
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="lg:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Type*</label>
-                      <select
-                        name="altCategory"
-                        value={formData.altCategory}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors disabled:bg-gray-100"
-                        required
-                        disabled={!formData.category}
-                      >
-                        <option value="">Select Type</option>
-                        {altCategories.map(altCat => (
-                          <option key={altCat._id} value={altCat.name}>{altCat.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="lg:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Brand*</label>
-                      <select
-                        name="brand"
-                        value={formData.brand}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors disabled:bg-gray-100"
-                        required
-                        disabled={!formData.altCategory}
-                      >
-                        <option value="">Select Brand</option>
-                        {brands.map(brand => (
-                          <option key={brand._id} value={brand.name}>{brand.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="lg:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                      <select
-                        name="model"
-                        value={formData.model}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors disabled:bg-gray-100"
-                        disabled={!formData.brand || models.length === 0}
-                      >
-                        <option value="">Select Model</option>
-                        {models.map((model) => (
-                          <option key={model._id} value={model.name}>{model.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="lg:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Submodel</label>
-                      <select
-                        name="submodel"
-                        value={formData.submodel}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors disabled:bg-gray-100"
-                        disabled={!formData.model || submodels.length === 0}
-                      >
-                        <option value="">Select Submodel</option>
-                        {submodels.map((submodel, index) => (
-                          <option key={index} value={submodel.name}>{submodel.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Debug Information (for development only) */}
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-yellow-700">
-                        <strong>Debug Info:</strong> Check browser console for detailed information about the categories data structure.
-                        Categories type: {typeof categories}, Is array: {Array.isArray(categories) ? 'Yes' : 'No'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            )}
-          </div>
+    <div>
+      <h1>Create Advertisement</h1>
+      
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Title:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
         </div>
-      </div>
+
+        <div>
+          <label>Description:</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label>Category:</label>
+          <select value={category} onChange={handleCategoryChange} required>
+            <option value="">Select Category</option>
+            {Array.isArray(categoryData.data) && categoryData.data.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Alternative Category:</label>
+          <select value={altCategory} onChange={handleAltCategoryChange} required disabled={!category}>
+            <option value="">Select Alternative Category</option>
+            {Array.isArray(altCategoryData.data) && altCategoryData.data.map((altCat) => (
+              <option key={altCat._id} value={altCat._id}>
+                {altCat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Brand:</label>
+          <select value={brand} onChange={handleBrandChange} required disabled={!altCategory}>
+            <option value="">Select Brand</option>
+            {Array.isArray(brandData.data) && brandData.data.map((brandItem) => (
+              <option key={brandItem._id} value={brandItem._id}>
+                {brandItem.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Model:</label>
+          <select value={model} onChange={handleModelChange} required disabled={!brand}>
+            <option value="">Select Model</option>
+            {Array.isArray(modelData.data) && modelData.data.map((modelItem) => (
+              <option key={modelItem._id} value={modelItem._id}>
+                {modelItem.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Submodel:</label>
+          <select
+            value={submodel}
+            onChange={(e) => setSubmodel(e.target.value)}
+            required
+            disabled={!model}
+          >
+            <option value="">Select Submodel</option>
+            {Array.isArray(submodelData.data) && submodelData.data.map((sub) => (
+              <option key={sub._id} value={sub._id}>
+                {sub.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Year:</label>
+          <input
+            type="number"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label>Condition:</label>
+          <input
+            type="text"
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label>Location:</label>
+          <input
+            type="text"
+            placeholder="City"
+            value={location.city}
+            onChange={(e) =>
+              setLocation({ ...location, city: e.target.value })
+            }
+            required
+          />
+          <input
+            type="text"
+            placeholder="State"
+            value={location.state}
+            onChange={(e) =>
+              setLocation({ ...location, state: e.target.value })
+            }
+            required
+          />
+        </div>
+
+        <div>
+          <label>Contact Info:</label>
+          <input
+            type="text"
+            placeholder="Phone"
+            value={contactInfo.phone}
+            onChange={(e) =>
+              setContactInfo({ ...contactInfo, phone: e.target.value })
+            }
+            required
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={contactInfo.email}
+            onChange={(e) =>
+              setContactInfo({ ...contactInfo, email: e.target.value })
+            }
+            required
+          />
+          <input
+            type="text"
+            placeholder="WhatsApp"
+            value={contactInfo.whatsapp}
+            onChange={(e) =>
+              setContactInfo({ ...contactInfo, whatsapp: e.target.value })
+            }
+          />
+        </div>
+
+        <div>
+          <label>Price:</label>
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+          />
+          <label>
+            <input
+              type="checkbox"
+              checked={isNegotiable}
+              onChange={(e) => setIsNegotiable(e.target.checked)}
+            />
+            Negotiable
+          </label>
+        </div>
+
+        <div>
+          <label>Tags:</label>
+          <input
+            type="text"
+            value={tags.join(",")}
+            onChange={(e) => setTags(e.target.value.split(","))}
+          />
+        </div>
+
+        <div>
+          <label>Ad Type:</label>
+          <select value={adType} onChange={(e) => setAdType(e.target.value)}>
+            <option value="standard">Standard</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Status:</label>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Images:</label>
+          <input
+            type="file"
+            multiple
+            onChange={(e) => setImages([...e.target.files])}
+          />
+        </div>
+
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Submitting..." : "Submit"}
+        </button>
+      </form>
     </div>
   );
-};
-
-// Wrap the component with Error Boundary
-const CreateAdvertisementWithErrorBoundary = () => (
-  <ErrorBoundary>
-    <CreateAdvertisement />
-  </ErrorBoundary>
-);
-
-export default CreateAdvertisementWithErrorBoundary;
+}
