@@ -353,7 +353,7 @@ export default function UserProfile() {
   const handleCreateAd = () => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate('/createAdvertisment');
+      navigate('/test');
     } else {
       toast.error("You need to be logged in to create an ad.");
       navigate('/signIn');

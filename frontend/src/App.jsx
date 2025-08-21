@@ -34,7 +34,7 @@ function App() {
             <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
             <Route path="/createAdvertisment" element={<CreateAdvertisement/>}/>
             <Route path="/admin/categoryManagement" element={<CategoryManagement />} />
-            {/* <Route path="/test" element={<Test/>} /> */}
+            <Route path="/test" element={<Test/>} />
 
           </Routes>
         </div>

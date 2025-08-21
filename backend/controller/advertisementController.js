@@ -1,5 +1,6 @@
 import Advertisement from "../models/ads.js";
-import Category from "../models/category.js"; // Assuming the new category model is imported
+import Category from "../models/categories/category.js";
+import SubCategory from "../models/categories/SubCategory.js";
 
 export async function createAdvertisement(req, res) {
     // Generate the next adId by incrementing the last adId

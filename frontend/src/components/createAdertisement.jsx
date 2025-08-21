@@ -24,7 +24,6 @@ export default function CreateAdvertisement() {
   const [tags, setTags] = useState([]);
   const [adType, setAdType] = useState("standard");
   const [status, setStatus] = useState("pending");
-  const [author, setAuthor] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -35,18 +34,75 @@ export default function CreateAdvertisement() {
   const [modelData, setModelData] = useState([]);
   const [submodelData, setSubmodelData] = useState([]);
 
+  const [authorData, setAuthorData] = useState([]);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(import.meta.env.VITE_BACKEND_URL + '/api/auth/category');
         setCategoryData(response.data);
         console.log("Categories fetched:", response.data);
+        console.log("First category structure:", response.data?.data?.[0]);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }
     };
 
+    const fetchAltCategories = async (e) => {
+      const selectedCategory = e.target.value;
+      const categoryId = selectedCategory._id
+      setCategoryData(selectedCategory);
+      console.log("Selected Category:", selectedCategory);
+      try {
+        await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${categoryId}/altCategories`)
+        .then((response) => {
+          setAltCategoryData(response.data);
+          console.log("Alternative categories fetched:", response.data);
+        }).catch((error) => {
+          console.error("Error fetching alternative categories:", error);
+        })
+        
+      } catch (error) {
+        console.log("selectedCategory:", selectedCategory);
+        console.error("Error fetching alternative categories:", error);
+      }
+    };
+
     fetchCategories();
+    fetchAltCategories();
+  }, []);
+
+  // useEffect(() => {
+  //   console.log("Category Data:", categoryData);
+  //   console.log("Category Names:", categoryData?.data && categoryData.data.map(cat => {
+  //     console.log("Individual cat object:", cat);
+  //     const categoryInfo = cat?.category?.[0];
+  //     return categoryInfo?.name || cat?.name;
+  //   }))
+  //   console.log("Alt Category Data:", altCategoryData);
+  //   console.log("Alt Category Names:", altCategoryData?.data && altCategoryData.data.map(altCat => {
+  //     console.log("Individual altCat object:", altCat);
+  //     const altCategoryInfo = altCat?.name || altCat?.category?.[0]?.name;
+  //     return altCategoryInfo?.name || altCat?.name;
+  //   }))
+  // }, [categoryData, altCategoryData]);
+
+  useEffect(() => {
+    const fetchAuthors = async () => {
+      try {
+        await axios.get(import.meta.env.VITE_BACKEND_URL + '/api/auth/user/userData',{
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          },
+        }).then((response) => {
+          setAuthorData(response.data.userID);
+          console.log("Authors fetched:", response.data);
+        })
+      }catch (error) {
+        console.error("Error fetching authors:", error);
+      }
+    }
+    fetchAuthors();
   }, []);
 
   const handleCategoryChange = async (e) => {
@@ -65,14 +121,13 @@ export default function CreateAdvertisement() {
     
     if (!selectedCategory) return;
     
-    try {
-      const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${selectedCategory}/altCategories`);
-      // If backend returns the whole category document, extract altCategories
-      const altCategories = response.data.altCategories || response.data;
-      setAltCategoryData(altCategories);
-    } catch (error) {
-      console.error("Error fetching alternative categories:", error);
-    }
+    // try {
+    //   const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${selectedCategory}/altCategories`);
+    //   console.log("Alt categories response:", response.data);
+    //   setAltCategoryData(response.data);
+    // } catch (error) {
+    //   console.error("Error fetching alternative categories:", error);
+    // }
   }
 
   const handleAltCategoryChange = async (e) => {
@@ -91,9 +146,8 @@ export default function CreateAdvertisement() {
     
     try {
       const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${category}/altCategories/${selectedAltCategory}/brands`);
-      // If backend returns the whole structure, extract brands
-      const brands = response.data.brands || response.data;
-      setBrandData(brands);
+      console.log("Brands response:", response.data);
+      setBrandData(response.data);
     } catch (error) {
       console.error("Error fetching brands:", error);
     }
@@ -113,9 +167,8 @@ export default function CreateAdvertisement() {
     
     try {
       const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${category}/altCategories/${altCategory}/brands/${selectedBrand}/models`);
-      // If backend returns the whole structure, extract models
-      const models = response.data.models || response.data;
-      setModelData(models);
+      console.log("Models response:", response.data);
+      setModelData(response.data);
     } catch (error) {
       console.error("Error fetching models:", error);
     }
@@ -133,9 +186,8 @@ export default function CreateAdvertisement() {
     
     try {
       const response = await axios.get(import.meta.env.VITE_BACKEND_URL + `/api/auth/category/${category}/altCategories/${altCategory}/brands/${brand}/models/${selectedModel}/submodels`);
-      // If backend returns the whole structure, extract submodels
-      const submodels = response.data.submodels || response.data;
-      setSubmodelData(submodels);
+      console.log("Submodels response:", response.data);
+      setSubmodelData(response.data);
     } catch (error) {
       console.error("Error fetching submodels:", error);
     }
@@ -166,9 +218,11 @@ export default function CreateAdvertisement() {
         tags: tags,
         adType: adType,
         status: status,
+        author: authorData
       };
 
-      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/auth/advertisement', adData);
+      const response = await axios.post(import.meta.env.VITE_BACKEND_URL + '/api/auth/advertisement', adData );
+      console.log("Auther ID:", authorData);
       console.log("Advertisement created:", response.data);
       setAdId(response.data._id);
       toast.success("Advertisement created successfully!");
@@ -209,11 +263,18 @@ export default function CreateAdvertisement() {
           <label>Category:</label>
           <select value={category} onChange={handleCategoryChange} required>
             <option value="">Select Category</option>
-            {Array.isArray(categoryData.data) && categoryData.data.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.category}
-              </option>
-            ))}
+            {Array.isArray(categoryData?.data) && categoryData.data.map((cat, index) => {
+              // Since category is an array, get the first element
+              const categoryInfo = cat?.category?.[0] || cat;
+              return (
+                <option 
+                  key={categoryInfo?._id || cat?._id || index} 
+                  value={categoryInfo?._id || cat?._id}
+                >
+                  {categoryInfo?.name || cat?.name || 'Unknown Category'}
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -221,7 +282,7 @@ export default function CreateAdvertisement() {
           <label>Alternative Category:</label>
           <select value={altCategory} onChange={handleAltCategoryChange} required disabled={!category}>
             <option value="">Select Alternative Category</option>
-            {Array.isArray(altCategoryData.data) && altCategoryData.data.map((altCat) => (
+            {Array.isArray(altCategoryData?.data) && altCategoryData.data.map((altCat) => (
               <option key={altCat._id} value={altCat._id}>
                 {altCat.name}
               </option>
@@ -233,7 +294,7 @@ export default function CreateAdvertisement() {
           <label>Brand:</label>
           <select value={brand} onChange={handleBrandChange} required disabled={!altCategory}>
             <option value="">Select Brand</option>
-            {Array.isArray(brandData.data) && brandData.data.map((brandItem) => (
+            {Array.isArray(brandData?.data) && brandData.data.map((brandItem) => (
               <option key={brandItem._id} value={brandItem._id}>
                 {brandItem.name}
               </option>
@@ -245,7 +306,7 @@ export default function CreateAdvertisement() {
           <label>Model:</label>
           <select value={model} onChange={handleModelChange} required disabled={!brand}>
             <option value="">Select Model</option>
-            {Array.isArray(modelData.data) && modelData.data.map((modelItem) => (
+            {Array.isArray(modelData?.data) && modelData.data.map((modelItem) => (
               <option key={modelItem._id} value={modelItem._id}>
                 {modelItem.name}
               </option>
@@ -262,7 +323,7 @@ export default function CreateAdvertisement() {
             disabled={!model}
           >
             <option value="">Select Submodel</option>
-            {Array.isArray(submodelData.data) && submodelData.data.map((sub) => (
+            {Array.isArray(submodelData?.data) && submodelData.data.map((sub) => (
               <option key={sub._id} value={sub._id}>
                 {sub.name}
               </option>

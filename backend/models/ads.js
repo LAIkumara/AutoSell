@@ -21,7 +21,7 @@ const advertisementSchema = new mongoose.Schema({
     tags: [String],
     adType: { type: String, default: 'standard' },
     status: { type: String, default: 'pending' },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    author: { type: String, ref: 'User', required: true }
 }, { timestamps: true });
 
 export default mongoose.model('Advertisement', advertisementSchema);
