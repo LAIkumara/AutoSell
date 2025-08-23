@@ -22,7 +22,9 @@ categoryRouter.put('/updateBrand/:brandId', brandController.updateBrand);
 categoryRouter.delete('/deleteBrand/:brandId', brandController.deleteBrand);
 
 categoryRouter.post('/createModel', modelController.createModel);
-
+categoryRouter.get('/fetchModels', modelController.getModels);
+categoryRouter.put('/updateModel/:modelId', modelController.updateModel);
+categoryRouter.delete('/deleteModel/:modelId', modelController.deleteModel);
 
 export default categoryRouter;
 
