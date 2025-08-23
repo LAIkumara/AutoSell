@@ -148,7 +148,7 @@ export async function getUserData(req, res) {
     }
 }
 
-// Option 2: Update JWT token after profile update (Alternative approach)
+
 export async function updateUser(req, res) {
     const userId = req.params.userID;
     const updatedData = req.body;
