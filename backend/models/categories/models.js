@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import brand from './brand';
+
 
 const productModelSchema = new mongoose.Schema({
   name: {
@@ -22,6 +22,13 @@ const productModelSchema = new mongoose.Schema({
     ref: 'Brand',
     required: true
   },
+  subModels: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
   isActive: {
     type: Boolean,
     default: true
@@ -32,4 +39,4 @@ const productModelSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('ProductModel', productModelSchema);
+export default mongoose.model('Model', productModelSchema);
