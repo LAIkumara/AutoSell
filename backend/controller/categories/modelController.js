@@ -145,3 +145,81 @@ export async function getModels(req, res) {
     }
 
 }
+
+//update model and sub-models
+export async function updateModel(req, res) {
+    if(!isAdmin(req)) {
+        return res.status(403).json({
+            message: "Access denied. Admins only.",
+        });
+    }
+    const { modelId } = req.params;
+    const { name, category, subCategory, brand, subModels, isActive } = req.body;
+    if (!modelId) {
+        return res.status(400).json({ message: 'Model ID is required.' });
+    }
+    try {
+        const model = await Model.findById(modelId);
+        if (!model) {
+            return res.status(404).json({ message: 'Model not found.' });
+        }
+        const updatedData = {
+            name: name ? name.trim() : model.name,
+            category: category || model.category,
+            subCategory: subCategory || model.subCategory,
+            brand: brand || model.brand,
+            isActive: isActive !== undefined ? isActive : model.isActive,
+        };
+        if (subModels && subModels.length > 0) {
+            const subModelNames = subModels.map(sm => sm.name.trim().toLowerCase());
+            const uniqueSubModelNames = new Set(subModelNames);
+            if (subModelNames.length !== uniqueSubModelNames.size) {
+                return res.status(400).json({
+                    message: "Sub-model names must be unique",
+                });
+            }
+            updatedData.subModels = subModels.map(sm => ({
+                name: sm.name.trim(),
+                isActive: sm.isActive !== undefined ? sm.isActive : true,
+                advertisementCount: 0
+            }));
+        }
+        const updatedModel = await Model.findByIdAndUpdate(modelId, updatedData, { new: true });
+        return res.status(200).json({
+            message: "Model updated successfully",
+            model: updatedModel,
+        });
+    } catch (error) {
+        console.error('Error updating model:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+// Delete model and sub-models
+
+export async function deleteModel(req, res) {
+    if (!isAdmin(req)) {
+        return res.status(403).json({
+            message: "Access denied. Admins only.",
+        });
+    }
+
+    const { modelId } = req.params;
+
+    if (!modelId) {
+        return res.status(400).json({ message: 'Model ID is required.' });
+    }
+
+    try {
+        const model = await Model.findById(modelId);
+        if (!model) {
+            return res.status(404).json({ message: 'Model not found.' });
+        }
+
+        await Model.findByIdAndDelete(modelId);
+        return res.status(200).json({ message: 'Model deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting model:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
